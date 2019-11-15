@@ -1,0 +1,31 @@
+---
+title: "Final Project"
+author: "Olly Gill"
+date: "11/12/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(readr)
+library(fs)
+library(sf)
+library(infer)
+library(wbstats)
+library(tidyverse)
+
+athlete_events <- read_csv("athlete_events.csv")
+winter_medals <- read_csv("winter.csv")
+summer_medals <- read_csv("summer.csv")
+population <- read_csv("49b53736-b59d-4a7f-ac6f-ceaefbd69ac2_Data.csv")
+GDP <- read_csv("8c5f41b2-c7f1-4e1f-bb05-8bbe1aa9a667_Data.csv")
+
+names(GDP)[3] <- "Team"
+```
+
+```{r}
+library(dplyr)
+all_data <- left_join(athlete_events, GDP, by = c("Team"))
+```
+
