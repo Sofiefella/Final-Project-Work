@@ -9,12 +9,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(readr)
-library(fs)
-library(sf)
-library(infer)
 library(wbstats)
 library(plotly)
 library(maps)
+library(ggExtra)
 library(data.table)
 library(gridExtra)
 library(knitr)
@@ -152,7 +150,7 @@ mappingdata$Sochi[is.na(mappingdata$Sochi)] <- 0
 
 world <- left_join(world, mappingdata, by="region")
 
-ggplot(world, aes(x = long, y = lat, group = group)) +
+p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
   geom_polygon(aes(fill = Paris)) +
   labs(title = "Paris 1900",
        x = NULL, y=NULL) +
@@ -163,7 +161,7 @@ ggplot(world, aes(x = long, y = lat, group = group)) +
   guides(fill=guide_colourbar(title="Athletes")) +
   scale_fill_gradient(low="white",high="red")
 
-ggplot(world, aes(x = long, y = lat, group = group)) +
+p2 <- ggplot(world, aes(x = long, y = lat, group = group)) +
   geom_polygon(aes(fill = Melbourne)) +
   labs(title = "Melbourne 1956",
        x = NULL, y = NULL) +
@@ -174,7 +172,7 @@ ggplot(world, aes(x = long, y = lat, group = group)) +
   guides(fill=guide_colourbar(title="Athletes")) +
   scale_fill_gradient2(low = "white", high = "red")
 
-ggplot(world, aes(x = long, y = lat, group = group)) +
+p3 <- ggplot(world, aes(x = long, y = lat, group = group)) +
   geom_polygon(aes(fill = Sochi)) +
   labs(title = "Sochi 2014",
        x = NULL, y = NULL) +
@@ -184,9 +182,31 @@ ggplot(world, aes(x = long, y = lat, group = group)) +
         plot.title = element_text(hjust = 0.5)) +
   guides(fill=guide_colourbar(title="Athletes")) +
   scale_fill_gradient2(low="white",high = "red")
+
+grid.arrange(p1, p2, p3, ncol=1)
 ```
 
 ```{r}
+athlete_events %>% 
+  na.omit() %>%
+  ggplot(aes(x=as.factor(Year), y = Height, fill = Sex)) +
+  geom_boxplot() +
+  labs(title = "Height Trends In Athletes Over Time", 
+       x = "Olympic Year", 
+       y = "Height (cm)") +
+  scale_fill_manual(values=c("pink","blue")) +
+  theme(axis.text.x=element_text(size = 5, angle = 30))
+```
 
+```{r}
+athlete_events %>% 
+  na.omit() %>%
+  ggplot(aes(x=as.factor(Year), y=Weight, fill=Sex)) +
+  geom_boxplot() +
+  labs(title = "Weight Trends In Athletes Over Time", 
+       x = "Olympic Year", 
+       y = "Weight (lb)") +
+  scale_fill_manual(values=c("pink","blue")) +
+  theme(axis.text.x=element_text(size = 5, angle = 30))
 ```
 

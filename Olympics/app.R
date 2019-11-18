@@ -1,15 +1,21 @@
-
-library(shiny)
+library(readr)
+library(wbstats)
+library(plotly)
+library(maps)
+library(ggExtra)
+library(data.table)
+library(gridExtra)
+library(knitr)
 library(tidyverse)
-library(janitor)
+library(shiny)
 library(lubridate)
 library(plotly)
-library(gt)
 library(shinythemes)
 
 all_data <- left_join(athlete_events, GDP, by = c("Team"))
 winter_medals <- read_csv("winter.csv")
 summer_medals <- read_csv("summer.csv")
+noc_regions <- read_csv("noc_regions.csv")
 
 
 ui <- fluidPage(theme = shinytheme("superhero"),
@@ -20,17 +26,88 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                            
                            tabPanel("Olympic Characteristics",
                                     tabsetPanel(
-                                        tabPanel("Winter Games"),
-                                        tabPanel("Summer Games"),
-                                        tabPanel("Location")
+                                        
+                                        tabPanel("Winter Games", 
+                                                 h3("What Kind Of Trends Are Shown In The Winter Games?"),
+                                                 br(),
+                                                 sidebarPanel(
+                                                     selectInput("Medals")
+                                                 ),
+                                                 mainPanel(
+                                                     plotlyOutput("wintermedalPlotly"),
+                                                     br()
+                                                 ),
+                                                 br()
+                                                 ),
+                                        
+                                        tabPanel("Summer Games",
+                                                 h3("What Kind Of Trends Are Shown In The Summer Games?"),
+                                                 br(),
+                                                 sidebarPanel(
+                                                     selectInput("Medals")
+                                                 ),
+                                                 mainPanel(
+                                                     plotlyOutput("summermedalPlotly"),
+                                                     br()
+                                                 ),
+                                                 br()
+                                                 ),
+                                        
+                                        tabPanel("Location",
+                                                 h3("Where Were Athletes Coming From Over Time?"),
+                                                 br(),
+                                                 sidebarPanel(
+                                                     selectInput("Countries")
+                                                 ),
+                                                 mainPanel(
+                                                     plotlyOutput("mapsPlotly"),
+                                                     br()
+                                                 ),
+                                                 br(),
+                                                 ),
                                         
                                         )),
                            tabPanel("Athlete Characteristics",
                                     tabsetPanel(
-                                        tabPanel("Gender"),
-                                        tabPanel("Age"),
-                                        tabPanel("Medals")
+                                        tabPanel("Gender",
+                                                 h3("What Have Gender Trends Been Over Time?"),
+                                                 br(),
+                                                 sidebarPanel(
+                                                     selectInput("Season")
+                                                 ),
+                                                 mainPanel(
+                                                     plotlyOutput("winterGender"),
+                                                     br(),
+                                                 ),
+                                                 br(),
+                                                 ),
                                         
+                                        tabPanel("Height",
+                                                 h3("What Are Height Trends Like For Olympic Athletes?"),
+                                                 br(),
+                                                 sidebarPanel(
+                                                   selectInput("Height")
+                                                 ),
+                                                 mainPanel(
+                                                   plotlyOutput("heightPlotly"),
+                                                   br()
+                                                 ),
+                                                 br(),
+                                        ),
+                                        
+                                        tabPanel("Weight",
+                                                 h3("What Are Weight Trends Like For Olympic Athletes?"),
+                                                 br(),
+                                                 sidebarPanel(
+                                                   selectInput("Weight")
+                                                 ),
+                                                 mainPanel(
+                                                   plotlyOutput("weightPlotly"),
+                                                   br()
+                                                 ),
+                                                 br(),
+                                        )
+                
                                     )),
                            
                            tabPanel("About",
@@ -56,35 +133,142 @@ ui <- fluidPage(theme = shinytheme("superhero"),
 ))
 
 
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
 
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
-        )
-    )
-)
-
-# Define server logic required to draw a histogram
 server <- function(input, output) {
 
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
+    output$wintermedalPlotly <- renderPlot({
+        wintermedal <-
+            winter_medals %>%
+            select(Country, Medal, Year) %>%
+            group_by(Country, Medal) %>%
+            count(Country) %>%
+            arrange(desc(n)) %>%
+            head(30) %>%
+            ggplot(aes(x = Country, y = n, group = Medal, fill = Medal)) + geom_col() +
+            labs(title = "The Top Medaling Countries: Winter Olympic Games", subtitle = "Which Countries Over Time Have Succeeded The Most?", x = "Country", y = "Number of Medals")
+    })
+    
+    output$summermedalPlotly <- renderPlot({
+        summermedal <-
+            summer_medals %>%
+            select(Country, Medal, Year) %>%
+            group_by(Country, Medal) %>%
+            count(Country) %>%
+            arrange(desc(n)) %>%
+            head(30) %>%
+            ggplot(aes(x = Country, y = n, group = Medal, fill = Medal)) + geom_col() +
+            labs(title = "The Top Medaling Countries: Sumer Olympic Games", subtitle = "Which Countries Over Time Have Succeeded The Most?", x = "Country", y = "Number of Medals")
+    })
+    
+    output$mapsPlotly <- renderPlot({
+        regions <- athlete_events %>% 
+            left_join(noc_regions, by="NOC") %>%
+            filter(!is.na(region))
+        
+        paris <- regions %>% 
+            filter(Games == "1900 Summer") %>%
+            group_by(region) %>%
+            summarize(Paris = length(unique(ID)))
+        
+        melbourne <- regions %>% 
+            filter(Games == "1956 Summer") %>%
+            group_by(region) %>%
+            summarize(Melbourne = length(unique(ID)))
+        
+        sochi <- regions %>% 
+            filter(Games == "2014 Winter") %>%
+            group_by(region) %>%
+            summarize(Sochi = length(unique(ID)))
+        
+        
+        world <- map_data("world")
+        
+        mappingdata <- tibble(region=unique(world$region))
+        
+        mappingdata <- mappingdata %>% 
+            left_join(paris, by="region") %>%
+            left_join(melbourne, by="region") %>%
+            left_join(sochi, by="region")
+        mappingdata$Paris[is.na(mappingdata$Paris)] <- 0
+        mappingdata$Melbourne[is.na(mappingdata$Melbourne)] <- 0
+        mappingdata$Sochi[is.na(mappingdata$Sochi)] <- 0
+        
+        world <- left_join(world, mappingdata, by="region")
+        
+        p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
+            geom_polygon(aes(fill = Paris)) +
+            labs(title = "Paris 1900",
+                 x = NULL, y=NULL) +
+            theme(axis.ticks = element_blank(),
+                  axis.text = element_blank(),
+                  panel.background = element_rect(fill = "navy"),
+                  plot.title = element_text(hjust = 0.5)) +
+            guides(fill=guide_colourbar(title="Athletes")) +
+            scale_fill_gradient(low="white",high="red")
+        
+        p2 <- ggplot(world, aes(x = long, y = lat, group = group)) +
+            geom_polygon(aes(fill = Melbourne)) +
+            labs(title = "Melbourne 1956",
+                 x = NULL, y = NULL) +
+            theme(axis.ticks = element_blank(),
+                  axis.text = element_blank(),
+                  panel.background = element_rect(fill = "navy"),
+                  plot.title = element_text(hjust = 0.5)) +
+            guides(fill=guide_colourbar(title="Athletes")) +
+            scale_fill_gradient2(low = "white", high = "red")
+        
+        p3 <- ggplot(world, aes(x = long, y = lat, group = group)) +
+            geom_polygon(aes(fill = Sochi)) +
+            labs(title = "Sochi 2014",
+                 x = NULL, y = NULL) +
+            theme(axis.ticks = element_blank(),
+                  axis.text = element_blank(),
+                  panel.background = element_rect(fill = "navy"),
+                  plot.title = element_text(hjust = 0.5)) +
+            guides(fill=guide_colourbar(title="Athletes")) +
+            scale_fill_gradient2(low="white",high = "red")
+        
+        grid.arrange(p1, p2, p3, ncol=1)
+    })
+    
+    output$winterGenderPlotly <- renderPlot({
+        Gender_Per_Year <- athlete_events %>%
+            filter(Season == "Winter") %>%
+            group_by(Year, Sex) %>%
+            count() %>%
+            arrange(Year)
+        
+        Gender_Per_Year %>%
+            ggplot(aes(x = Year, y = n, group = Sex, color = Sex)) +
+            geom_point() +
+            geom_line() +
+            labs(title = "The Number of Male and Female Winter Olympic Athletes Over Time", subtitle = "How has the number of male and female athletes changed over the years?", x = "Year", y = "Number of Athletes")
+    })
+    
+    output$heightPlotly <- renderPlot({
+      athlete_events %>% 
+        na.omit() %>%
+        ggplot(aes(x=as.factor(Year), y = Height, fill = Sex)) +
+        geom_boxplot() +
+        labs(title = "Height Trends In Athletes Over Time", 
+             x = "Olympic Year", 
+             y = "Height (cm)") +
+        scale_fill_manual(values=c("pink","blue")) +
+        theme(axis.text.x=element_text(size = 5, angle = 30))
+    })
+    
+    output$heightPlotly <- renderPlot({
+      athlete_events %>% 
+        na.omit() %>%
+        ggplot(aes(x=as.factor(Year), y=Weight, fill=Sex)) +
+        geom_boxplot() +
+        labs(title = "Weight Trends In Athletes Over Time", 
+             x = "Olympic Year", 
+             y = "Weight (lb)") +
+        scale_fill_manual(values=c("pink","blue")) +
+        theme(axis.text.x=element_text(size = 5, angle = 30))
     })
 }
 
-# Run the application 
+
 shinyApp(ui = ui, server = server)
