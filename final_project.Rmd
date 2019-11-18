@@ -13,6 +13,11 @@ library(fs)
 library(sf)
 library(infer)
 library(wbstats)
+library(plotly)
+library(maps)
+library(data.table)
+library(gridExtra)
+library(knitr)
 library(tidyverse)
 
 athlete_events <- read_csv("athlete_events.csv")
@@ -27,5 +32,161 @@ names(GDP)[3] <- "Team"
 ```{r}
 library(dplyr)
 all_data <- left_join(athlete_events, GDP, by = c("Team"))
+```
+
+```{r}
+summer_medals %>%
+  select(Country, Medal, Year) %>%
+  group_by(Country, Medal) %>%
+  count(Country) %>%
+  arrange(desc(n)) %>%
+  head(30) %>%
+  ggplot(aes(x = Country, y = n, group = Medal, fill = Medal)) + geom_col() +
+  labs(title = "The Top Medaling Countries: Summer Olympic Games", subtitle = "Which Countries Over Time Have Succeeded The Most?", x = "Country", y = "Number of Medals")
+  
+```
+
+```{r}
+winter_medals %>%
+  select(Country, Medal, Year) %>%
+  group_by(Country, Medal) %>%
+  count(Country) %>%
+  arrange(desc(n)) %>%
+  head(30) %>%
+  ggplot(aes(x = Country, y = n, group = Medal, fill = Medal)) + geom_col() +
+  labs(title = "The Top Medaling Countries: Winter Olympic Games", subtitle = "Which Countries Over Time Have Succeeded The Most?", x = "Country", y = "Number of Medals")
+  
+```
+
+```{r}
+Gender_Per_Year <- athlete_events %>%
+  filter(Season == "Summer") %>%
+  group_by(Year, Sex) %>%
+  count() %>%
+  arrange(Year)
+
+Gender_Per_Year %>%
+  ggplot(aes(x = Year, y = n, group = Sex, color = Sex)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "The Number of Male and Female Summer Olympic Athletes Over Time", subtitle = "How has the number of male and female athletes changed over the years?", x = "Year", y = "Number of Athletes")
+```
+
+```{r}
+Gender_Per_Year <- athlete_events %>%
+  filter(Season == "Winter") %>%
+  group_by(Year, Sex) %>%
+  count() %>%
+  arrange(Year)
+
+Gender_Per_Year %>%
+  ggplot(aes(x = Year, y = n, group = Sex, color = Sex)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "The Number of Male and Female Winter Olympic Athletes Over Time", subtitle = "How has the number of male and female athletes changed over the years?", x = "Year", y = "Number of Athletes")
+```
+
+```{r}
+counts <- athlete_events %>% filter(Sport != "Art Competitions") %>%
+  group_by(Year, Season) %>%
+  summarize(
+    Athletes = length(unique(ID)),
+    Nations = length(unique(NOC)),
+    Events = length(unique(Event))
+  )
+
+ggplot(counts, aes(x=Year, y=Athletes, group=Season, color=Season)) +
+  geom_point(size=1) +
+  geom_line() +
+  scale_color_manual(values=c("purple","blue")) +
+  labs(title = "Number of Athletes Over Time", x = "Year")
+
+ggplot(counts, aes(x=Year, y=Nations, group=Season, color=Season)) +
+  geom_point(size=1) +
+  geom_line() +
+  scale_color_manual(values=c("purple","blue")) +
+  labs(title = "Number of Nations Over Time", x = "Year")
+
+ggplot(counts, aes(x=Year, y=Events, group=Season, color=Season)) +
+  geom_point(size=1) +
+  geom_line() +
+  scale_color_manual(values=c("purple","blue")) +
+  labs(title = "Number of Events Over Time", x = "Year")
+
+```
+
+```{r}
+noc_regions <- read_csv("noc_regions.csv")
+
+regions <- athlete_events %>% 
+  left_join(noc_regions, by="NOC") %>%
+  filter(!is.na(region))
+
+paris <- regions %>% 
+  filter(Games == "1900 Summer") %>%
+  group_by(region) %>%
+  summarize(Paris = length(unique(ID)))
+
+melbourne <- regions %>% 
+  filter(Games == "1956 Summer") %>%
+  group_by(region) %>%
+  summarize(Melbourne = length(unique(ID)))
+
+sochi <- regions %>% 
+  filter(Games == "2014 Winter") %>%
+  group_by(region) %>%
+  summarize(Sochi = length(unique(ID)))
+
+
+world <- map_data("world")
+
+mappingdata <- tibble(region=unique(world$region))
+
+mappingdata <- mappingdata %>% 
+  left_join(paris, by="region") %>%
+  left_join(melbourne, by="region") %>%
+  left_join(sochi, by="region")
+mappingdata$Paris[is.na(mappingdata$Paris)] <- 0
+mappingdata$Melbourne[is.na(mappingdata$Melbourne)] <- 0
+mappingdata$Sochi[is.na(mappingdata$Sochi)] <- 0
+
+world <- left_join(world, mappingdata, by="region")
+
+ggplot(world, aes(x = long, y = lat, group = group)) +
+  geom_polygon(aes(fill = Paris)) +
+  labs(title = "Paris 1900",
+       x = NULL, y=NULL) +
+  theme(axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        panel.background = element_rect(fill = "navy"),
+        plot.title = element_text(hjust = 0.5)) +
+  guides(fill=guide_colourbar(title="Athletes")) +
+  scale_fill_gradient(low="white",high="red")
+
+ggplot(world, aes(x = long, y = lat, group = group)) +
+  geom_polygon(aes(fill = Melbourne)) +
+  labs(title = "Melbourne 1956",
+       x = NULL, y = NULL) +
+  theme(axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        panel.background = element_rect(fill = "navy"),
+        plot.title = element_text(hjust = 0.5)) +
+  guides(fill=guide_colourbar(title="Athletes")) +
+  scale_fill_gradient2(low = "white", high = "red")
+
+ggplot(world, aes(x = long, y = lat, group = group)) +
+  geom_polygon(aes(fill = Sochi)) +
+  labs(title = "Sochi 2014",
+       x = NULL, y = NULL) +
+  theme(axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        panel.background = element_rect(fill = "navy"),
+        plot.title = element_text(hjust = 0.5)) +
+  guides(fill=guide_colourbar(title="Athletes")) +
+  scale_fill_gradient2(low="white",high = "red")
+```
+
+```{r}
+
 ```
 
