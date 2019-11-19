@@ -42,7 +42,7 @@ noc_regions <- read_csv("noc_regions.csv", col_types = cols(
 ))
 
 
-ui <- fluidPage(theme = shinytheme("superhero"),
+ui <- fluidPage(theme = shinytheme("united"),
                 
       br(),
                 
