@@ -192,10 +192,7 @@ athlete_events %>%
   labs(title = "Height Trends In Athletes Over Time", 
        x = "Olympic Year", 
        y = "Height (cm)") +
-  scale_fill_manual(values=c("pink","blue")) +
-  #scale_x_continuous(breaks = seq(1896, 2016, by = 10),
-                     labels = c("1896", "1906", "'16", "'26",
-                                "'36", "'46", "'56", "'66", "'76", "'86", "'96", "2006", "2016"))
+  scale_fill_manual(values=c("pink","blue"))
 ```
 
 ```{r}
@@ -205,7 +202,7 @@ athlete_events %>%
   geom_boxplot() +
   labs(title = "Weight Trends In Athletes Over Time", 
        x = "Olympic Year", 
-       y = "Weight (lb)") +
+       y = "Weight (kg)") +
   scale_fill_manual(values=c("pink","blue")) +
   theme(axis.text.x=element_text(size = 5, angle = 30))
 ```
