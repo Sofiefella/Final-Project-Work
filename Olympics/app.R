@@ -11,6 +11,24 @@ library(shiny)
 library(lubridate)
 library(shinythemes)
 
+athlete_events <- read_csv("athlete_events.csv", col_types = cols(
+  ID = col_double(),
+  Name = col_character(),
+  Sex = col_character(),
+  Age = col_double(),
+  Height = col_double(),
+  Weight = col_double(),
+  Team = col_character(),
+  NOC = col_character(),
+  Games = col_character(),
+  Year = col_double(),
+  Season = col_character(),
+  City = col_character(),
+  Sport = col_character(),
+  Event = col_character(),
+  Medal = col_character()
+))
+
 winter_medals <- read_csv("winter.csv", col_types = cols(
   Year = col_double(),
   City = col_character(),
@@ -22,6 +40,7 @@ winter_medals <- read_csv("winter.csv", col_types = cols(
   Event = col_character(),
   Medal = col_character()
 ))
+
 summer_medals <- read_csv("summer.csv", col_types = cols(
   Year = col_double(),
   City = col_character(),
@@ -33,6 +52,7 @@ summer_medals <- read_csv("summer.csv", col_types = cols(
   Event = col_character(),
   Medal = col_character()
 ))
+
 noc_regions <- read_csv("noc_regions.csv", col_types = cols(
   NOC = col_character(),
   region = col_character(),
@@ -150,7 +170,10 @@ server <- function(input, output) {
             arrange(desc(n)) %>%
             head(30) %>%
             ggplot(aes(x = Country, y = n, group = Medal, fill = Medal)) + geom_col() +
-            labs(title = "The Top Medaling Countries: Sumer Olympic Games", subtitle = "Which Countries Over Time Have Succeeded The Most?", x = "Country", y = "Number of Medals")
+            labs(title = "The Top Medaling Countries: Sumer Olympic Games", 
+                 subtitle = "Which Countries Over Time Have Succeeded The Most?", 
+                 x = "Country", 
+                 y = "Number of Medals")
     })
     
     output$mapsPlot <- renderPlot({
@@ -236,7 +259,10 @@ server <- function(input, output) {
             ggplot(aes(x = Year, y = n, group = Sex, color = Sex)) +
             geom_point() +
             geom_line() +
-            labs(title = "The Number of Male and Female Winter Olympic Athletes Over Time", subtitle = "How has the number of male and female athletes changed over the years?", x = "Year", y = "Number of Athletes")
+            labs(title = "The Number of Male and Female Winter Olympic Athletes Over Time", 
+                 subtitle = "How has the number of male and female athletes changed over the years?", 
+                 x = "Year", 
+                 y = "Number of Athletes")
     })
     
     output$heightPlot <- renderPlot({

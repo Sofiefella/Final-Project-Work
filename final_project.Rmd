@@ -85,7 +85,8 @@ Gender_Per_Year %>%
 ```
 
 ```{r}
-counts <- athlete_events %>% filter(Sport != "Art Competitions") %>%
+counts <- athlete_events %>% 
+  filter(Sport != "Art Competitions") %>%
   group_by(Year, Season) %>%
   summarize(
     Athletes = length(unique(ID)),
@@ -96,19 +97,19 @@ counts <- athlete_events %>% filter(Sport != "Art Competitions") %>%
 ggplot(counts, aes(x=Year, y=Athletes, group=Season, color=Season)) +
   geom_point(size=1) +
   geom_line() +
-  scale_color_manual(values=c("purple","blue")) +
+  scale_color_manual(values = c("purple","blue")) +
   labs(title = "Number of Athletes Over Time", x = "Year")
 
 ggplot(counts, aes(x=Year, y=Nations, group=Season, color=Season)) +
   geom_point(size=1) +
   geom_line() +
-  scale_color_manual(values=c("purple","blue")) +
+  scale_color_manual(values = c("purple","blue")) +
   labs(title = "Number of Nations Over Time", x = "Year")
 
 ggplot(counts, aes(x=Year, y=Events, group=Season, color=Season)) +
   geom_point(size=1) +
   geom_line() +
-  scale_color_manual(values=c("purple","blue")) +
+  scale_color_manual(values = c("purple","blue")) +
   labs(title = "Number of Events Over Time", x = "Year")
 
 ```
@@ -187,23 +188,24 @@ ggplot(world, aes(x = long, y = lat, group = group)) +
 ```{r}
 athlete_events %>% 
   na.omit() %>%
-  ggplot(aes(x=as.factor(Year), y = Height, fill = Sex)) +
+  ggplot(aes(x = as.factor(Year), y = Height, fill = Sex)) +
   geom_boxplot() +
   labs(title = "Height Trends In Athletes Over Time", 
        x = "Olympic Year", 
        y = "Height (cm)") +
-  scale_fill_manual(values=c("pink","blue"))
+  scale_fill_manual(values = c("pink","blue")) +
+  theme(axis.text.x=element_text(size = 5, angle = 30))
 ```
 
 ```{r}
 athlete_events %>% 
   na.omit() %>%
-  ggplot(aes(x=as.factor(Year), y=Weight, fill=Sex)) +
+  ggplot(aes(x = as.factor(Year), y=Weight, fill=Sex)) +
   geom_boxplot() +
   labs(title = "Weight Trends In Athletes Over Time", 
        x = "Olympic Year", 
        y = "Weight (kg)") +
-  scale_fill_manual(values=c("pink","blue")) +
+  scale_fill_manual(values = c("pink","blue")) +
   theme(axis.text.x=element_text(size = 5, angle = 30))
 ```
 
