@@ -70,21 +70,23 @@ ui <- fluidPage(theme = shinytheme("united"),
                                         
                   tabPanel("Winter Games", 
                        
-                      h3("What Kind Of Trends Are Shown In The Winter Games?"),
+                      h3("What Countries Have Been Successful In The Winter Games?"),
                        
                       br(),
                        
-                      sidebarPanel(h4("Medals")),
+                      sidebarPanel(h4("Medals"),
+                                   p("Over the past 22 Winter Olympic Games, not including the 2018 games, the graph on the right shows that during this period of time the Unitied States has collected the largest total amount of medals, with Canada following close behind. This graph shows the top 13 countries to date today with the highest number of medals collected in the Winter Games. Each country has a color coated legend to show what kinds of medals they are collecting as well.")),
                       
                       mainPanel(plotOutput("wintermedalPlot"))),
                                         
                   tabPanel("Summer Games",
                        
-                        h3("What Kind Of Trends Are Shown In The Summer Games?"),
+                        h3("What Countries Have Been Successful In The Summer Games?"),
                            
                         br(),
                           
-                        sidebarPanel(h4("Medals")),
+                        sidebarPanel(h4("Medals"),
+                                     p("Over the past 28 Summer Olympic Games, the graph on the right shows that during this period of time the Unitied States has collected the largest total amount of medals, with no other country coming anywhere close behind to challenge the US total number of medals or any type of medal as well. This graph shows the top 12 countries to date today with the highest number of medals collected in the Summer Games. Each country has a color coated legend to show what kinds of medals they are collecting as well.")),
                             
                         mainPanel(plotOutput("summermedalPlot"))),
                                         
@@ -94,9 +96,15 @@ ui <- fluidPage(theme = shinytheme("united"),
                         
                         br(),
                         
-                        sidebarPanel(h4("Countries")),
+                        sidebarPanel(h4("Countries"),
+                                     p("By looking at the progression of graphs on the right, it is clear from these plots we can see that the geographic representation in the Olympics has expanded over time since the earlier Olympic Games in 1900. However, despite this expansion, the Olympics still have large strides to make to incorporate more of the world. Even in 2014, many regions remain severely underrepresented. These regions include, but are not limitied to, almost all of Africa, South America, the western half of South America, Southwest Asia, the Indonesian islands, and Iceland. Hopefully one day we can look back and see almost all of the world highly represnted in the Games.")),
                         
-                        mainPanel(plotOutput("mapsPlot"))))),
+                        mainPanel(
+                          plotOutput("mapsPlot"),
+                          br(),
+                          plotOutput("maps2Plot"),
+                          br(),
+                          plotOutput("maps3Plot"))))),
                            
                 tabPanel("Athlete Characteristics",
                                     
@@ -108,9 +116,13 @@ ui <- fluidPage(theme = shinytheme("united"),
                       
                       br(),
                       
-                      sidebarPanel(h4("Season")),
+                      sidebarPanel(h4("Seasonal Trends"),
+                                   p("Looking at the overall trends for the growth of male and female athletes over time in both seasons together, it is clear that females have had exponential growth in their involvement in the Games, while the men have grown at a slightly less severe rate.")),
                      
-                      mainPanel(plotOutput("winterGenderPlot"))),
+                      mainPanel(
+                        plotOutput("winterGenderPlot"),
+                        br(),
+                        plotOutput("summerGenderPlot"))),
                                         
                   tabPanel("Height",
                       
@@ -177,75 +189,101 @@ server <- function(input, output) {
     })
     
     output$mapsPlot <- renderPlot({
-        regions <- athlete_events %>% 
-            left_join(noc_regions, by="NOC") %>%
-            filter(!is.na(region))
-        
-        paris <- regions %>% 
-            filter(Games == "1900 Summer") %>%
-            group_by(region) %>%
-            summarize(Paris = length(unique(ID)))
-        
-        melbourne <- regions %>% 
-            filter(Games == "1956 Summer") %>%
-            group_by(region) %>%
-            summarize(Melbourne = length(unique(ID)))
-        
-        sochi <- regions %>% 
-            filter(Games == "2014 Winter") %>%
-            group_by(region) %>%
-            summarize(Sochi = length(unique(ID)))
-        
-        
-        world <- map_data("world")
-        
-        mappingdata <- tibble(region=unique(world$region))
-        
-        mappingdata <- mappingdata %>% 
-            left_join(paris, by="region") %>%
-            left_join(melbourne, by="region") %>%
-            left_join(sochi, by="region")
-        mappingdata$Paris[is.na(mappingdata$Paris)] <- 0
-        mappingdata$Melbourne[is.na(mappingdata$Melbourne)] <- 0
-        mappingdata$Sochi[is.na(mappingdata$Sochi)] <- 0
-        
-        world <- left_join(world, mappingdata, by="region")
-        
-        p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
-            geom_polygon(aes(fill = Paris)) +
-            labs(title = "Paris 1900",
-                 x = NULL, y=NULL) +
-            theme(axis.ticks = element_blank(),
-                  axis.text = element_blank(),
-                  panel.background = element_rect(fill = "navy"),
-                  plot.title = element_text(hjust = 0.5)) +
-            guides(fill=guide_colourbar(title="Athletes")) +
-            scale_fill_gradient(low="white",high="red")
-        
-        p2 <- ggplot(world, aes(x = long, y = lat, group = group)) +
-            geom_polygon(aes(fill = Melbourne)) +
-            labs(title = "Melbourne 1956",
-                 x = NULL, y = NULL) +
-            theme(axis.ticks = element_blank(),
-                  axis.text = element_blank(),
-                  panel.background = element_rect(fill = "navy"),
-                  plot.title = element_text(hjust = 0.5)) +
-            guides(fill=guide_colourbar(title="Athletes")) +
-            scale_fill_gradient2(low = "white", high = "red")
-        
-       p3 <- ggplot(world, aes(x = long, y = lat, group = group)) +
-            geom_polygon(aes(fill = Sochi)) +
-            labs(title = "Sochi 2014",
-                 x = NULL, y = NULL) +
-            theme(axis.ticks = element_blank(),
-                  axis.text = element_blank(),
-                  panel.background = element_rect(fill = "navy"),
-                  plot.title = element_text(hjust = 0.5)) +
-            guides(fill=guide_colourbar(title="Athletes")) +
-            scale_fill_gradient2(low="white",high = "red")
-
-       grid.arrange(p1, p2, p3, ncol=1)
+      regions <- athlete_events %>% 
+        left_join(noc_regions, by="NOC") %>%
+        filter(!is.na(region))
+      
+      paris <- regions %>% 
+        filter(Games == "1900 Summer") %>%
+        group_by(region) %>%
+        summarize(Paris = length(unique(ID)))
+      
+      world <- map_data("world")
+      
+      mappingdata <- tibble(region=unique(world$region))
+      
+      mappingdata <- mappingdata %>% 
+        left_join(paris, by="region")
+      mappingdata$Paris[is.na(mappingdata$Paris)] <- 0
+      
+      world <- left_join(world, mappingdata, by="region")
+      
+      ggplot(world, aes(x = long, y = lat, group = group)) +
+        geom_polygon(aes(fill = Paris)) +
+        labs(title = "Paris 1900",
+             x = NULL, y = NULL) +
+        theme(axis.ticks = element_blank(),
+              axis.text = element_blank(),
+              panel.background = element_rect(fill = "navy"),
+              plot.title = element_text(hjust = 0.5)) +
+        guides(fill=guide_colourbar(title="Athletes")) +
+        scale_fill_gradient2(low="white",high = "red")
        
+    })
+    
+    output$maps2Plot <- renderPlot({
+      regions <- athlete_events %>% 
+        left_join(noc_regions, by="NOC") %>%
+        filter(!is.na(region))
+      
+      melbourne <- regions %>% 
+        filter(Games == "1956 Summer") %>%
+        group_by(region) %>%
+        summarize(Melbourne = length(unique(ID)))
+      
+      world <- map_data("world")
+      
+      mappingdata <- tibble(region=unique(world$region))
+      
+      mappingdata <- mappingdata %>% 
+        left_join(melbourne, by="region")
+      mappingdata$Melbourne[is.na(mappingdata$Melbourne)] <- 0
+      
+      world <- left_join(world, mappingdata, by="region")
+      
+      ggplot(world, aes(x = long, y = lat, group = group)) +
+        geom_polygon(aes(fill = Melbourne)) +
+        labs(title = "Melbourne 1956",
+             x = NULL, y = NULL) +
+        theme(axis.ticks = element_blank(),
+              axis.text = element_blank(),
+              panel.background = element_rect(fill = "navy"),
+              plot.title = element_text(hjust = 0.5)) +
+        guides(fill=guide_colourbar(title="Athletes")) +
+        scale_fill_gradient2(low="white",high = "red")
+      
+    })
+    
+    output$maps3Plot <- renderPlot({
+      regions <- athlete_events %>% 
+        left_join(noc_regions, by="NOC") %>%
+        filter(!is.na(region))
+      
+      sochi <- regions %>% 
+        filter(Games == "2014 Winter") %>%
+        group_by(region) %>%
+        summarize(Sochi = length(unique(ID)))
+      
+      world <- map_data("world")
+      
+      mappingdata <- tibble(region=unique(world$region))
+      
+      mappingdata <- mappingdata %>% 
+        left_join(sochi, by="region")
+      mappingdata$Sochi[is.na(mappingdata$Sochi)] <- 0
+      
+      world <- left_join(world, mappingdata, by="region")
+      
+      ggplot(world, aes(x = long, y = lat, group = group)) +
+        geom_polygon(aes(fill = Sochi)) +
+        labs(title = "Sochi 2014",
+             x = NULL, y = NULL) +
+        theme(axis.ticks = element_blank(),
+              axis.text = element_blank(),
+              panel.background = element_rect(fill = "navy"),
+              plot.title = element_text(hjust = 0.5)) +
+        guides(fill=guide_colourbar(title="Athletes")) +
+        scale_fill_gradient2(low="white",high = "red")
     })
     
     output$winterGenderPlot <- renderPlot({
@@ -263,6 +301,20 @@ server <- function(input, output) {
                  subtitle = "How has the number of male and female athletes changed over the years?", 
                  x = "Year", 
                  y = "Number of Athletes")
+    })
+    
+    output$summerGenderPlot <- renderPlot({
+      Gender_Per_Year <- athlete_events %>%
+        filter(Season == "Summer") %>%
+        group_by(Year, Sex) %>%
+        count() %>%
+        arrange(Year)
+      
+      Gender_Per_Year %>%
+        ggplot(aes(x = Year, y = n, group = Sex, color = Sex)) +
+        geom_point() +
+        geom_line() +
+        labs(title = "The Number of Male and Female Summer Olympic Athletes Over Time", subtitle = "How has the number of male and female athletes changed over the years?", x = "Year", y = "Number of Athletes")
     })
     
     output$heightPlot <- renderPlot({
