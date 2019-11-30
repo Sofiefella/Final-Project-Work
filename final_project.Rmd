@@ -13,6 +13,7 @@ library(wbstats)
 library(plotly)
 library(maps)
 library(ggExtra)
+library(highcharter)
 library(data.table)
 library(gridExtra)
 library(knitr)
@@ -207,5 +208,77 @@ athlete_events %>%
        y = "Weight (kg)") +
   scale_fill_manual(values = c("pink","blue")) +
   theme(axis.text.x=element_text(size = 5, angle = 30))
+```
+
+```{r}
+age <- athlete_events %>%
+  na.omit() %>%
+  filter(Season == "Summer")
+
+ggplot(age, aes(x = Age))+
+  geom_histogram(binwidth = 1, aes(fill = ..count..), color = "purple", fill = "black") +
+    facet_wrap(~Sex) +
+labs(title = "Age Distribution of Olympics Athletes",
+     subtitle = "Data Taken From the Summer Olympics 1896-2016",
+     x = "Age",
+     y = "Number of Athletes") +
+  theme(legend.position = "none",
+        axis.text = element_text(size = 8,face="bold"),
+        plot.title = element_text(size=16,face = "bold")) +
+  theme(panel.background = element_rect(fill = "white"))
+```
+
+```{r}
+age_data <- athlete_events %>%
+  drop_na(Age) %>%
+  filter(Season == "Summer")
+
+age_data$Medal <- ifelse(is.na(age_data$Medal),"others",
+                         ifelse(age_data$Medal== "Gold","Gold",
+                          ifelse(age_data$Medal== "Silver","Silver","Bronze")))
+
+hcboxplot(x = age_data$Age, var = age_data$Sex, var2 = age_data$Medal, outliers = FALSE) %>% 
+hc_chart(type = "row") %>%
+hc_title(text = "Age Distributed: Medal Winners & Others") %>%
+  hc_subtitle(text = "Data collected From the Summer Olympics 1896-2016")
+```
+
+
+```{r}
+athlete_events %>%
+  ggplot(aes(x = Age)) +
+  geom_density(color = "black", fill = "red") +
+  labs(title = "Age Distribution",
+       x = "Age", 
+       y = "Density") +
+  theme_minimal() +
+  theme(plot.title = element_text(size=16,face = "bold"))
+
+athlete_events %>%
+  ggplot(aes(x = Age, fill = Sex)) +
+  geom_density(alpha = 0.3) +
+  labs(title = "Age Distribution by Sex",
+       x = "Age", 
+       y = "Density") +
+  theme_minimal() +
+  theme(plot.title = element_text(size=16,face = "bold"))
+
+```
+
+
+```{r}
+wintermedals <- athlete_events %>% 
+  group_by(Year, Season, Medal) %>% 
+  filter(Season == "Winter") %>%
+  summarise(mean = mean(Age, na.rm = TRUE))
+
+ggplot(wintermedals, aes(x = Year, y = mean, group = Medal, color = Medal)) +
+  geom_point(size = 1) +
+  geom_line()  +
+  labs(title = "Age of Athletes Winning Medals",
+       subtitle = "Athletes without medals are depicted as well",
+       x = "Year",
+       y = "Average Age") + 
+theme(plot.title = element_text(size=16,face = "bold"))
 ```
 

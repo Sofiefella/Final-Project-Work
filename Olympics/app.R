@@ -6,6 +6,7 @@ library(ggExtra)
 library(data.table)
 library(gridExtra)
 library(knitr)
+library(highcharter)
 library(tidyverse)
 library(shiny)
 library(lubridate)
@@ -68,27 +69,50 @@ ui <- fluidPage(theme = shinytheme("united"),
                                     
               tabsetPanel(
                                         
+                  tabPanel("Trends",
+                      
+                      h3("What Kind of Trends Can We See Over The Past 120 Years?"),
+                      
+                      br(),
+                      
+                      sidebarPanel(h4("Trends"),
+                                   p("The graphs on the right show trends pertaining to the number of athletes, events, and nations participating in the Olympics over time.")),
+                                   
+                      mainPanel(plotOutput("athletesPlot"),
+                                br(),
+                                plotOutput("eventsPlot"),
+                                br(),
+                                plotOutput("nationsPlot"))),
+                
                   tabPanel("Winter Games", 
                        
-                      h3("What Countries Have Been Successful In The Winter Games?"),
+                      h3("What Countries Have Been Successful In The Winter Games? What Age Athletes?"),
                        
                       br(),
                        
                       sidebarPanel(h4("Medals"),
                                    p("Over the past 22 Winter Olympic Games, not including the 2018 games, the graph on the right shows that during this period of time the Unitied States has collected the largest total amount of medals, with Canada following close behind. This graph shows the top 13 countries to date today with the highest number of medals collected in the Winter Games. Each country has a color coated legend to show what kinds of medals they are collecting as well.")),
                       
-                      mainPanel(plotOutput("wintermedalPlot"))),
+                      mainPanel(plotOutput("wintermedalPlot"),
+                                br(),
+                                highchartOutput("agemedalsPlot"),
+                                br(),
+                                plotOutput("wintermedalsPlot"))),
                                         
                   tabPanel("Summer Games",
                        
-                        h3("What Countries Have Been Successful In The Summer Games?"),
+                        h3("What Countries Have Been Successful In The Summer Games? At What Age?"),
                            
                         br(),
                           
                         sidebarPanel(h4("Medals"),
                                      p("Over the past 28 Summer Olympic Games, the graph on the right shows that during this period of time the Unitied States has collected the largest total amount of medals, with no other country coming anywhere close behind to challenge the US total number of medals or any type of medal as well. This graph shows the top 12 countries to date today with the highest number of medals collected in the Summer Games. Each country has a color coated legend to show what kinds of medals they are collecting as well.")),
                             
-                        mainPanel(plotOutput("summermedalPlot"))),
+                        mainPanel(plotOutput("summermedalPlot"),
+                                  br(),
+                                  highchartOutput("agemedals2Plot"),
+                                  br(),
+                                  plotOutput("summermedalsPlot"))),
                                         
                   tabPanel("Location",
                         
@@ -124,25 +148,31 @@ ui <- fluidPage(theme = shinytheme("united"),
                         br(),
                         plotOutput("summerGenderPlot"))),
                                         
-                  tabPanel("Height",
+                  tabPanel("Height & Weight",
                       
-                      h3("What Are Height Trends Like For Olympic Athletes?"),
-                      
-                      br(),
-                      
-                      sidebarPanel(h4("Height")),
-                      
-                      mainPanel(plotOutput("heightPlot"))),
-                   
-                    tabPanel("Weight",
-                      
-                      h3("What Are Weight Trends Like For Olympic Athletes?"),
+                      h3("What Are Body Trends Like For Olympic Athletes?"),
                       
                       br(),
                       
-                      sidebarPanel(h4("Weight")),
+                      sidebarPanel(h4("Height & Weight"),
+                                   p("Both of the plots show that for both males and females, their corresponding heights and weights has increased slightly over the history of the Games. While these increases are not dramatic, we can definitely still see that it has increased over the following years. Something interesting to keep in mind is that while it may look like some athletes stick out of the 'norm', we aren't able to tell by looking at this chart what kind of body types are favored for certain events.")),
                       
-                      mainPanel(plotOutput("weightPlot"))))),
+                      mainPanel(
+                        plotOutput("heightPlot"),
+                        br(),
+                        plotOutput("weightPlot"))),
+                 
+                  tabPanel("Age",
+                           
+                        h3("What Ages Are Athletes Typically?"),
+                        
+                        br(),
+                        
+                        mainPanel(plotOutput("agePlot"),
+                                  br(),
+                                  plotOutput("age3Plot"),
+                                  br(),
+                                  plotOutput("age2Plot"))))),
                            
                   tabPanel("About",
                       
@@ -339,6 +369,161 @@ server <- function(input, output) {
              y = "Weight (kg)") +
         scale_fill_manual(values=c("pink","blue")) +
         theme(axis.text.x=element_text(size = 5, angle = 30))
+    })
+    
+    output$athletesPlot <- renderPlot({
+      counts <- athlete_events %>% 
+        filter(Sport != "Art Competitions") %>%
+        group_by(Year, Season) %>%
+        summarize(
+          Athletes = length(unique(ID))
+        )
+      
+      ggplot(counts, aes(x=Year, y=Athletes, group=Season, color=Season)) +
+        geom_point(size=1) +
+        geom_line() +
+        scale_color_manual(values = c("purple","blue")) +
+        labs(title = "Number of Athletes Over Time", x = "Year")
+      
+    })
+    
+    output$eventsPlot <- renderPlot({
+      counts <- athlete_events %>% 
+        filter(Sport != "Art Competitions") %>%
+        group_by(Year, Season) %>%
+        summarize(
+          Events = length(unique(Event))
+        )
+      
+      ggplot(counts, aes(x=Year, y=Events, group=Season, color=Season)) +
+        geom_point(size=1) +
+        geom_line() +
+        scale_color_manual(values = c("purple","blue")) +
+        labs(title = "Number of Events Over Time", x = "Year")
+      
+    })
+    
+    output$nationsPlot <- renderPlot({
+      counts <- athlete_events %>% 
+        filter(Sport != "Art Competitions") %>%
+        group_by(Year, Season) %>%
+        summarize(
+          Nations = length(unique(NOC))
+        )
+      
+      ggplot(counts, aes(x=Year, y=Nations, group=Season, color=Season)) +
+        geom_point(size=1) +
+        geom_line() +
+        scale_color_manual(values = c("purple","blue")) +
+        labs(title = "Number of Nations Over Time", x = "Year")
+      
+    })
+    
+    output$agemedalsPlot <- renderHighchart({
+    age_data <- athlete_events %>%
+      drop_na(Age) %>%
+      filter(Season == "Winter")
+    
+    age_data$Medal <- ifelse(is.na(age_data$Medal),"others",
+                             ifelse(age_data$Medal== "Gold","Gold",
+                                    ifelse(age_data$Medal== "Silver","Silver","Bronze")))
+    
+    hcboxplot(x = age_data$Age, var = age_data$Sex, var2 = age_data$Medal, outliers = FALSE) %>% 
+      hc_chart(type = "row") %>%
+      hc_title(text = "Age Distributed: Medal Winners & Others") %>%
+      hc_subtitle(text = "Data collected From the Winter Olympics 1896-2016")
+    
+    })
+    
+    output$agemedals2Plot <- renderHighchart({
+      age_data <- athlete_events %>%
+        drop_na(Age) %>%
+        filter(Season == "Summer")
+      
+      age_data$Medal <- ifelse(is.na(age_data$Medal),"others",
+                               ifelse(age_data$Medal== "Gold","Gold",
+                                      ifelse(age_data$Medal== "Silver","Silver","Bronze")))
+      
+      hcboxplot(x = age_data$Age, var = age_data$Sex, var2 = age_data$Medal, outliers = FALSE) %>% 
+        hc_chart(type = "row") %>%
+        hc_title(text = "Age Distributed: Medal Winners & Others") %>%
+        hc_subtitle(text = "Data collected From the Summer Olympics 1896-2016")
+      
+    })
+    
+    output$agePlot <- renderPlot({
+    age <- athlete_events %>%
+      na.omit() %>%
+      filter(Season == "Summer")
+    
+    ggplot(age, aes(x = Age))+
+      geom_histogram(binwidth = 1, aes(fill = ..count..), color = "purple", fill = "black") +
+      facet_wrap(~Sex) +
+      labs(title = "Age Distribution of Olympics Athletes",
+           subtitle = "Data Taken From the Summer Olympics 1896-2016",
+           x = "Age",
+           y = "Number of Athletes") +
+      theme(legend.position = "none",
+            axis.text = element_text(size = 8,face="bold"),
+            plot.title = element_text(size=16,face = "bold")) +
+      theme(panel.background = element_rect(fill = "white"))
+    
+    })
+    
+    output$age2Plot <- renderPlot({
+      athlete_events %>%
+        ggplot(aes(x = Age)) +
+        geom_density(color = "black", fill = "red") +
+        labs(title = "Age Distribution",
+             x = "Age", 
+             y = "Density") +
+        theme_minimal() +
+        theme(plot.title = element_text(size=16,face = "bold"))
+    })
+    
+    output$age3Plot <- renderPlot({
+      athlete_events %>%
+        ggplot(aes(x = Age, fill = Sex)) +
+        geom_density(alpha = 0.3) +
+        labs(title = "Age Distribution by Sex",
+             x = "Age", 
+             y = "Density") +
+        theme_minimal() +
+        theme(plot.title = element_text(size=16,face = "bold"))
+    })
+    
+    output$wintermedalsPlot <- renderPlot({
+    wintermedals <- athlete_events %>% 
+      group_by(Year, Season, Medal) %>% 
+      filter(Season == "Winter") %>%
+      summarise(mean = mean(Age, na.rm = TRUE))
+    
+    ggplot(wintermedals, aes(x = Year, y = mean, group = Medal, color = Medal)) +
+      geom_point(size = 1) +
+      geom_line()  +
+      labs(title = "Age of Athletes Winning Medals",
+           subtitle = "Athletes without medals are depicted as well",
+           x = "Year",
+           y = "Average Age") + 
+      theme(plot.title = element_text(size=16,face = "bold"))
+    
+    })
+    
+    output$summermedalsPlot <- renderPlot({
+      wintermedals <- athlete_events %>% 
+        group_by(Year, Season, Medal) %>% 
+        filter(Season == "Summer") %>%
+        summarise(mean = mean(Age, na.rm = TRUE))
+      
+      ggplot(wintermedals, aes(x = Year, y = mean, group = Medal, color = Medal)) +
+        geom_point(size = 1) +
+        geom_line()  +
+        labs(title = "Age of Athletes Winning Medals",
+             subtitle = "Athletes without medals are depicted as well",
+             x = "Year",
+             y = "Average Age") + 
+        theme(plot.title = element_text(size=16,face = "bold"))
+      
     })
 }
 
