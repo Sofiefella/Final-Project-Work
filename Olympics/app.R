@@ -208,8 +208,27 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                   plotOutput("age3Plot"),
                                   br(),
                                   p("This last plot is similar to the one above in that it takes the age data and plots it by the density of each age, but this plot also shows us how the density charts are made by gender. It is very similar to the graph above with an added element of division by sex."))))),
-                           
-                  tabPanel("About",
+                  
+                    tabPanel("Statistical Analysis",
+                      
+                          h2("What Does The Data Show?"),
+                             
+                          br(),
+                             
+                          sidebarPanel(h3("Two Findings:"),
+                                       p("The first graph shows a linear regression that was run to show the participation of male and female athletes over time and the resulting best-fit line plotted."),
+                                       br(),
+                                       p("Below, a table is shown that depicts a different statistic I was interested in, the affect of age on winning a gold medal.")),
+                      
+                          mainPanel(plotOutput("statsPlot"),
+                                    br(),
+                                    p("This graph helps show us that over time female participation in the Games has been steadily increasing. If we look back at the 1900 Games to now, we can tell that the growth of female involvement is increasing to hopefully one day catch up with that of the males!"),
+                                    br(),
+                                    tableOutput("statsTable"),
+                                    p("In this table, the average coefficient value, or the slope of the regression line, is shown with 5th and 95th percentile values to give an indication of uncertainty associated with the term. Additionally, its corresponding r-squared value is shown as well in order to give an indication of the linear fit between the two variables."))),
+                  
+             
+                    tabPanel("About",
                       
                       mainPanel(
                           
@@ -652,6 +671,62 @@ server <- function(input, output) {
              y = "Average Age") + 
         theme(plot.title = element_text(size = 16,face = "bold"))
       
+    })
+    
+    output$statsPlot <- renderPlot({
+    
+      count_per_nation <- athlete_events %>% 
+      filter(Year %in% c(1900,1936,1976,1984,2016)) %>%
+      group_by(Year, NOC, Sex) %>%
+      summarize(Count = length(unique(ID))) %>%
+      spread(Sex, Count)
+    
+    names(count_per_nation)[3:4] <- c("Male","Female")
+    count_per_nation$Male[is.na(count_per_nation$Male)] <- 0
+    count_per_nation$Female[is.na(count_per_nation$Female)] <- 0
+    count_per_nation$Year <- as.factor(count_per_nation$Year)
+    
+    count_per_nation %>%
+      ggplot(aes(x = Male, y = Female, group = Year, color = Year)) +
+      geom_point(alpha = 0.5) +
+      geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
+      geom_smooth(method = "lm", se = FALSE) +
+      labs(title = "Female vs. Male Olympians from participating NOCs",
+           x = "Number of Female Participants",
+           y = "Number of Male Participants",
+           subtitle = "How are the number of males vs. females different?") +
+      theme(plot.title = element_text(size = 16,face = "bold"))
+    
+    })
+    
+    output$statsTable <- renderTable({
+    
+      athlete_clean <- athlete_events %>%
+        na.omit() %>%
+        select(Age, Medal, Sex) %>%
+        mutate(gold = as.logical(ifelse(Medal == "Gold", "TRUE", "FALSE")))
+      
+      model_2 <- lm(data = athlete_clean, formula = gold ~ Age)
+      
+      conf_ints <- confint_tidy(model_2, conf.level = .9) %>% 
+        mutate(label = c("Intercept", "Coefficient")) %>%
+        filter(label == "Coefficient")
+      
+      r_squared <- glance(model_2) %>%
+        select(r.squared) %>%
+        mutate(label = "Coefficient")
+      
+      tidy(model_2) %>%
+        mutate(label = c("Intercept", "Coefficient")) %>%
+        inner_join(conf_ints, by = "label") %>%
+        inner_join(r_squared, by = "label") %>%
+        select(estimate, conf.low, conf.high, r.squared) %>%
+        rename("Coefficient" = estimate,
+               "5th Percentile" = conf.low,
+               "95th Percentile" = conf.high,
+               "R Squared" = r.squared) %>%
+        mutate_if(is.numeric, round, digits = 8)
+    
     })
 }
 

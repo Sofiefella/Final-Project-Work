@@ -12,11 +12,14 @@ library(readr)
 library(wbstats)
 library(plotly)
 library(maps)
+library(gt)
+library(janitor)
 library(ggExtra)
 library(highcharter)
 library(data.table)
 library(gridExtra)
 library(knitr)
+library(broom)
 library(tidyverse)
 
 athlete_events <- read_csv("athlete_events.csv")
@@ -270,5 +273,83 @@ wintermedals <- athlete_events %>%
            x = "Year",
            y = "Average Age") + 
       theme(plot.title = element_text(size = 16,face = "bold"))
+```
+
+
+```{r}
+count_per_nation <- athlete_events %>% 
+  filter(Year %in% c(1900,1936,1976,1984,2016)) %>%
+  group_by(Year, NOC, Sex) %>%
+  summarize(Count = length(unique(ID))) %>%
+  spread(Sex, Count)
+
+names(count_per_nation)[3:4] <- c("Male","Female")
+count_per_nation$Male[is.na(count_per_nation$Male)] <- 0
+count_per_nation$Female[is.na(count_per_nation$Female)] <- 0
+count_per_nation$Year <- as.factor(count_per_nation$Year)
+
+count_per_nation %>%
+  ggplot(aes(x = Male, y = Female, group = Year, color = Year)) +
+  geom_point(alpha = 0.5) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Female vs. Male Olympians from participating NOCs",
+       x = "Number of Female Participants",
+       y = "Number of Male Participants",
+       subtitle = "How are the number of males vs. females different?")
+```
+
+
+```{r}
+athlete_clean <- athlete_events %>%
+      na.omit() %>%
+      select(Age, Medal, Sex) %>%
+      mutate(gold = as.logical(ifelse(Medal == "Gold", "TRUE", "FALSE")))
+    
+model <- lm(data = athlete_clean, formula = gold ~ Age)
+
+model_data <- tidy(model, conf.int = TRUE, conf.level = 0.90) %>%
+  select(term, estimate, conf.low, conf.high) %>%
+    mutate(term = c("Intercept", "Age")) 
+
+model_data %>%
+  gt() %>%
+  tab_header(title = "The Affect of Age On Winning A Gold Medal", 
+             subtitle = "Will being older make you less likely to win the gold?") %>% 
+  cols_label(
+    "estimate" = "Coefficient",
+    "conf.low" = "5th percentile",
+    "conf.high" = "95th percentile",
+    "term" = " ") %>%
+  cols_align("center") %>%
+  fmt_number(
+    columns = c("estimate", "conf.low", "conf.high"),
+    decimals = 5,
+    use_seps = FALSE
+  )
+```
+
+
+```{r}
+model_2 <- lm(data = athlete_clean, formula = gold ~ Age)
+        
+conf_ints <- confint_tidy(model_2, conf.level = .9) %>% 
+  mutate(label = c("Intercept", "Coefficient")) %>%
+  filter(label == "Coefficient")
+        
+r_squared <- glance(model_2) %>%
+  select(r.squared) %>%
+  mutate(label = "Coefficient")
+        
+tidy(model_2) %>%
+  mutate(label = c("Intercept", "Coefficient")) %>%
+  inner_join(conf_ints, by = "label") %>%
+  inner_join(r_squared, by = "label") %>%
+  select(estimate, conf.low, conf.high, r.squared) %>%
+  rename("Coefficient" = estimate,
+                   "5th Percentile" = conf.low,
+                   "95th Percentile" = conf.high,
+                   "R Squared" = r.squared) %>%
+  mutate_if(is.numeric, round, digits = 6)
 ```
 
