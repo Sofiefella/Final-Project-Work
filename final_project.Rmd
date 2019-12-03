@@ -35,250 +35,240 @@ all_data <- left_join(athlete_events, GDP, by = c("Team"))
 
 ```{r}
 summer_medals %>%
-  select(Country, Medal, Year) %>%
-  group_by(Country, Medal) %>%
-  count(Country) %>%
-  arrange(desc(n)) %>%
-  head(30) %>%
-  ggplot(aes(x = Country, y = n, group = Medal, fill = Medal)) + geom_col() +
-  labs(title = "The Top Medaling Countries: Summer Olympic Games", subtitle = "Which Countries Over Time Have Succeeded The Most?", x = "Country", y = "Number of Medals")
+            select(Country, Medal, Year) %>%
+            group_by(Country, Medal) %>%
+            count(Country) %>%
+            arrange(desc(n)) %>%
+            head(30) %>%
+            ggplot(aes(x = Country, y = n, group = Medal, fill = Medal)) + 
+            geom_col() +
+            labs(title = "The Top Medaling Countries: Sumer Olympic Games", 
+                 subtitle = "Which Countries Over Time Have Succeeded The Most?", 
+                 x = "Country", 
+                 y = "Number of Medals") +
+        theme(plot.title = element_text(size = 16,face = "bold"))
   
 ```
 
 ```{r}
 winter_medals %>%
-  select(Country, Medal, Year) %>%
-  group_by(Country, Medal) %>%
-  count(Country) %>%
-  arrange(desc(n)) %>%
-  head(30) %>%
-  ggplot(aes(x = Country, y = n, group = Medal, fill = Medal)) + geom_col() +
-  labs(title = "The Top Medaling Countries: Winter Olympic Games", subtitle = "Which Countries Over Time Have Succeeded The Most?", x = "Country", y = "Number of Medals")
+            select(Country, Medal, Year) %>%
+            group_by(Country, Medal) %>%
+            count(Country) %>%
+            arrange(desc(n)) %>%
+            head(30) %>%
+            ggplot(aes(x = Country, y = n, group = Medal, fill = Medal)) + 
+            geom_col() +
+            labs(title = "The Top Medaling Countries: Winter Olympic Games", 
+                 subtitle = "Which Countries Over Time Have Succeeded The Most?", 
+                 x = "Country", 
+                 y = "Number of Medals") +
+        theme(plot.title = element_text(size = 16,face = "bold"))
   
 ```
 
 ```{r}
 Gender_Per_Year <- athlete_events %>%
-  filter(Season == "Summer") %>%
-  group_by(Year, Sex) %>%
-  count() %>%
-  arrange(Year)
-
-Gender_Per_Year %>%
-  ggplot(aes(x = Year, y = n, group = Sex, color = Sex)) +
-  geom_point() +
-  geom_line() +
-  labs(title = "The Number of Male and Female Summer Olympic Athletes Over Time", subtitle = "How has the number of male and female athletes changed over the years?", x = "Year", y = "Number of Athletes")
+        filter(Season == "Summer") %>%
+        group_by(Year, Sex) %>%
+        count() %>%
+        arrange(Year)
+      
+      Gender_Per_Year %>%
+        ggplot(aes(x = Year, y = n, group = Sex, color = Sex)) +
+        geom_point() +
+        geom_line() +
+        labs(title = "Male & Female Summer Olympic Athletes Over Time", 
+             subtitle = "How has the number of male and female athletes changed over the years?", 
+             x = "Year", 
+             y = "Number of Athletes") +
+        theme(plot.title = element_text(size = 16,face = "bold"))
 ```
 
 ```{r}
 Gender_Per_Year <- athlete_events %>%
-  filter(Season == "Winter") %>%
-  group_by(Year, Sex) %>%
-  count() %>%
-  arrange(Year)
-
-Gender_Per_Year %>%
-  ggplot(aes(x = Year, y = n, group = Sex, color = Sex)) +
-  geom_point() +
-  geom_line() +
-  labs(title = "The Number of Male and Female Winter Olympic Athletes Over Time", subtitle = "How has the number of male and female athletes changed over the years?", x = "Year", y = "Number of Athletes")
+            filter(Season == "Winter") %>%
+            group_by(Year, Sex) %>%
+            count() %>%
+            arrange(Year)
+        
+        Gender_Per_Year %>%
+            ggplot(aes(x = Year, y = n, group = Sex, color = Sex)) +
+            geom_point() +
+            geom_line() +
+            labs(title = "Male & Female Winter Olympic Athletes Over Time", 
+                 subtitle = "How has the number of male and female athletes changed over the years?", 
+                 x = "Year", 
+                 y = "Number of Athletes") +
+          theme(plot.title = element_text(size = 16,face = "bold"))
 ```
 
 ```{r}
+
+# Adjust the summarize and the axes to make this graph for events and nations as well 
+# in shiny.
+
 counts <- athlete_events %>% 
-  filter(Sport != "Art Competitions") %>%
-  group_by(Year, Season) %>%
-  summarize(
-    Athletes = length(unique(ID)),
-    Nations = length(unique(NOC)),
-    Events = length(unique(Event))
-  )
-
-ggplot(counts, aes(x=Year, y=Athletes, group=Season, color=Season)) +
-  geom_point(size=1) +
-  geom_line() +
-  scale_color_manual(values = c("purple","blue")) +
-  labs(title = "Number of Athletes Over Time", x = "Year")
-
-ggplot(counts, aes(x=Year, y=Nations, group=Season, color=Season)) +
-  geom_point(size=1) +
-  geom_line() +
-  scale_color_manual(values = c("purple","blue")) +
-  labs(title = "Number of Nations Over Time", x = "Year")
-
-ggplot(counts, aes(x=Year, y=Events, group=Season, color=Season)) +
-  geom_point(size=1) +
-  geom_line() +
-  scale_color_manual(values = c("purple","blue")) +
-  labs(title = "Number of Events Over Time", x = "Year")
+        filter(Sport != "Art Competitions") %>%
+        group_by(Year, Season) %>%
+        summarize(Athletes = length(unique(ID)))
+      
+      ggplot(counts, aes(x = Year, y = Athletes, group = Season, color = Season)) +
+        geom_point(size = 1) +
+        geom_line() +
+        scale_color_manual(values = c("purple","blue")) +
+        labs(title = "The Number of Athletes Over Time", 
+             x = "Year",
+             y = "Athletes",
+             subtitle = "Have females or males been more involved?") +
+        theme(plot.title = element_text(size = 16,face = "bold"))
 
 ```
 
 ```{r}
 noc_regions <- read_csv("noc_regions.csv")
 
+# Adjust all of the countries for different ones in shiny.
+
 regions <- athlete_events %>% 
-  left_join(noc_regions, by="NOC") %>%
-  filter(!is.na(region))
-
-paris <- regions %>% 
-  filter(Games == "1900 Summer") %>%
-  group_by(region) %>%
-  summarize(Paris = length(unique(ID)))
-
-melbourne <- regions %>% 
-  filter(Games == "1956 Summer") %>%
-  group_by(region) %>%
-  summarize(Melbourne = length(unique(ID)))
-
-sochi <- regions %>% 
-  filter(Games == "2014 Winter") %>%
-  group_by(region) %>%
-  summarize(Sochi = length(unique(ID)))
-
-
-world <- map_data("world")
-
-mappingdata <- tibble(region=unique(world$region))
-
-mappingdata <- mappingdata %>% 
-  left_join(paris, by="region") %>%
-  left_join(melbourne, by="region") %>%
-  left_join(sochi, by="region")
-mappingdata$Paris[is.na(mappingdata$Paris)] <- 0
-mappingdata$Melbourne[is.na(mappingdata$Melbourne)] <- 0
-mappingdata$Sochi[is.na(mappingdata$Sochi)] <- 0
-
-world <- left_join(world, mappingdata, by="region")
-
-ggplot(world, aes(x = long, y = lat, group = group)) +
-  geom_polygon(aes(fill = Paris)) +
-  labs(title = "Paris 1900",
-       x = NULL, y=NULL) +
-  theme(axis.ticks = element_blank(),
-        axis.text = element_blank(),
-        panel.background = element_rect(fill = "navy"),
-        plot.title = element_text(hjust = 0.5)) +
-  guides(fill=guide_colourbar(title="Athletes")) +
-  scale_fill_gradient(low="white",high="orange")
-
-ggplot(world, aes(x = long, y = lat, group = group)) +
-  geom_polygon(aes(fill = Melbourne)) +
-  labs(title = "Melbourne 1956",
-       x = NULL, y = NULL) +
-  theme(axis.ticks = element_blank(),
-        axis.text = element_blank(),
-        panel.background = element_rect(fill = "navy"),
-        plot.title = element_text(hjust = 0.5)) +
-  guides(fill=guide_colourbar(title="Athletes")) +
-  scale_fill_gradient2(low = "white", high = "orange")
-
-ggplot(world, aes(x = long, y = lat, group = group)) +
-  geom_polygon(aes(fill = Sochi)) +
-  labs(title = "Sochi 2014",
-       x = NULL, y = NULL) +
-  theme(axis.ticks = element_blank(),
-        axis.text = element_blank(),
-        panel.background = element_rect(fill = "navy"),
-        plot.title = element_text(hjust = 0.5)) +
-  guides(fill=guide_colourbar(title="Athletes")) +
-  scale_fill_gradient2(low="white",high = "orange")
+        left_join(noc_regions, by = "NOC") %>%
+        filter(!is.na(region))
+      
+      paris <- regions %>% 
+        filter(Games == "1900 Summer") %>%
+        group_by(region) %>%
+        summarize(Paris = length(unique(ID)))
+      
+      world <- map_data("world")
+      
+      mappingdata <- tibble(region=unique(world$region))
+      
+      mappingdata <- mappingdata %>% 
+        left_join(paris, by = "region")
+      mappingdata$Paris[is.na(mappingdata$Paris)] <- 0
+      
+      world <- left_join(world, mappingdata, by = "region")
+      
+      ggplot(world, aes(x = long, y = lat, group = group)) +
+        geom_polygon(aes(fill = Paris)) +
+        labs(title = "Paris 1900",
+             x = NULL, 
+             y = NULL) +
+        theme(axis.ticks = element_blank(),
+              axis.text = element_blank(),
+              panel.background = element_rect(fill = "navy"),
+              plot.title = element_text(hjust = 0.5)) +
+        guides(fill = guide_colourbar(title = "Athletes")) +
+        scale_fill_gradient2(low = "white", high = "orange")
 ```
 
 ```{r}
 athlete_events %>% 
-  na.omit() %>%
-  ggplot(aes(x = as.factor(Year), y = Height, fill = Sex)) +
-  geom_boxplot() +
-  labs(title = "Height Trends In Athletes Over Time", 
-       x = "Olympic Year", 
-       y = "Height (cm)") +
-  scale_fill_manual(values = c("pink","blue")) +
-  theme(axis.text.x=element_text(size = 5, angle = 30))
+        na.omit() %>%
+        ggplot(aes(x = as.factor(Year), y = Height, fill = Sex)) +
+        geom_boxplot() +
+        labs(title = "Height Trends In Athletes Over Time", 
+             x = "Olympic Year", 
+             y = "Height (cm)",
+             subtitle = "How have Olympic athletes' heights fluctuated over time?") +
+        scale_fill_manual(values = c("pink","blue")) +
+        theme(axis.text.x = element_text(size = 5, angle = 20)) +
+        theme(plot.title = element_text(size = 16,face = "bold"))
 ```
 
 ```{r}
 athlete_events %>% 
-  na.omit() %>%
-  ggplot(aes(x = as.factor(Year), y=Weight, fill=Sex)) +
-  geom_boxplot() +
-  labs(title = "Weight Trends In Athletes Over Time", 
-       x = "Olympic Year", 
-       y = "Weight (kg)") +
-  scale_fill_manual(values = c("pink","blue")) +
-  theme(axis.text.x=element_text(size = 5, angle = 30))
+        na.omit() %>%
+        ggplot(aes(x = as.factor(Year), y = Weight, fill=Sex)) +
+        geom_boxplot() +
+        labs(title = "Weight Trends In Athletes Over Time", 
+             x = "Olympic Year", 
+             y = "Weight (kg)",
+             subtitle = "How have Olympic athletes' weights fluctuated over time?") +
+        scale_fill_manual(values = c("pink","blue")) +
+        theme(axis.text.x = element_text(size = 5, angle = 20)) +
+        theme(plot.title = element_text(size = 16,face = "bold"))
 ```
 
 ```{r}
+
+# Make for both seasons in shiny.
+
 age <- athlete_events %>%
-  na.omit() %>%
-  filter(Season == "Summer")
-
-ggplot(age, aes(x = Age))+
-  geom_histogram(binwidth = 1, aes(fill = ..count..), color = "purple", fill = "black") +
-    facet_wrap(~Sex) +
-labs(title = "Age Distribution of Olympics Athletes",
-     subtitle = "Data Taken From the Summer Olympics 1896-2016",
-     x = "Age",
-     y = "Number of Athletes") +
-  theme(legend.position = "none",
-        axis.text = element_text(size = 8,face="bold"),
-        plot.title = element_text(size=16,face = "bold")) +
-  theme(panel.background = element_rect(fill = "white"))
+      na.omit() %>%
+      filter(Season == "Summer")
+    
+    ggplot(age, aes(x = Age))+
+      geom_histogram(binwidth = 1, aes(fill = ..count..), color = "purple", fill = "black") +
+      facet_wrap(~Sex) +
+      labs(title = "Age Distribution of Olympics Athletes",
+           subtitle = "Data Taken From the Summer Olympics 1896-2016",
+           x = "Age",
+           y = "Number of Athletes") +
+      theme(legend.position = "none",
+            axis.text = element_text(size = 8,face="bold"),
+            plot.title = element_text(size = 16,face = "bold"))
 ```
 
 ```{r}
-age_data <- athlete_events %>%
-  drop_na(Age) %>%
-  filter(Season == "Summer")
 
-age_data$Medal <- ifelse(is.na(age_data$Medal),"others",
-                         ifelse(age_data$Medal== "Gold","Gold",
-                          ifelse(age_data$Medal== "Silver","Silver","Bronze")))
+# Make for both seasons in shiny.
 
-hcboxplot(x = age_data$Age, var = age_data$Sex, var2 = age_data$Medal, outliers = FALSE) %>% 
-hc_chart(type = "row") %>%
-hc_title(text = "Age Distributed: Medal Winners & Others") %>%
-  hc_subtitle(text = "Data collected From the Summer Olympics 1896-2016")
+  age_data <- athlete_events %>%
+      drop_na(Age) %>%
+      filter(Season == "Winter")
+    
+    age_data$Medal <- ifelse(is.na(age_data$Medal),"others",
+                             ifelse(age_data$Medal== "Gold","Gold",
+                                    ifelse(age_data$Medal== "Silver","Silver","Bronze")))
+    
+    hcboxplot(x = age_data$Age, var = age_data$Sex, var2 = age_data$Medal, outliers = FALSE) %>% 
+      hc_chart(type = "row") %>%
+      hc_title(text = "Age Distributed: Medal Winners & Others") %>%
+      hc_subtitle(text = "Data collected From the Winter Olympics 1896-2016")
 ```
 
 
 ```{r}
 athlete_events %>%
-  ggplot(aes(x = Age)) +
-  geom_density(color = "black", fill = "red") +
-  labs(title = "Age Distribution",
-       x = "Age", 
-       y = "Density") +
-  theme_minimal() +
-  theme(plot.title = element_text(size=16,face = "bold"))
+        ggplot(aes(x = Age)) +
+        geom_density(color = "black", fill = "red") +
+        labs(title = "Age Distribution",
+             x = "Age", 
+             y = "Density",
+             subtitle = "What is the overall density of the different athlete ages?") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 16,face = "bold"))
 
 athlete_events %>%
-  ggplot(aes(x = Age, fill = Sex)) +
-  geom_density(alpha = 0.3) +
-  labs(title = "Age Distribution by Sex",
-       x = "Age", 
-       y = "Density") +
-  theme_minimal() +
-  theme(plot.title = element_text(size=16,face = "bold"))
+        ggplot(aes(x = Age, fill = Sex)) +
+        geom_density(alpha = 0.3) +
+        labs(title = "Age Distribution by Sex",
+             x = "Age", 
+             y = "Density",
+             subtitle = "How is the density of ages broken up by sex?") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 16,face = "bold"))
 
 ```
 
 
 ```{r}
+
+# Make for both seasons in shiny.
+
 wintermedals <- athlete_events %>% 
-  group_by(Year, Season, Medal) %>% 
-  filter(Season == "Winter") %>%
-  summarise(mean = mean(Age, na.rm = TRUE))
-
-ggplot(wintermedals, aes(x = Year, y = mean, group = Medal, color = Medal)) +
-  geom_point(size = 1) +
-  geom_line()  +
-  labs(title = "Age of Athletes Winning Medals",
-       subtitle = "Athletes without medals are depicted as well",
-       x = "Year",
-       y = "Average Age") + 
-theme(plot.title = element_text(size=16,face = "bold"))
+      group_by(Year, Season, Medal) %>% 
+      filter(Season == "Winter") %>%
+      summarise(mean = mean(Age, na.rm = TRUE))
+    
+    ggplot(wintermedals, aes(x = Year, y = mean, group = Medal, color = Medal)) +
+      geom_point(size = 1) +
+      geom_line()  +
+      labs(title = "Age of Athletes Winning Medals",
+           subtitle = "What are the typical ages of medaling athletes?",
+           x = "Year",
+           y = "Average Age") + 
+      theme(plot.title = element_text(size = 16,face = "bold"))
 ```
 
