@@ -15,6 +15,7 @@ library(maps)
 library(gt)
 library(janitor)
 library(ggExtra)
+library(webshot)
 library(highcharter)
 library(data.table)
 library(gridExtra)
@@ -312,7 +313,7 @@ model_data <- tidy(model, conf.int = TRUE, conf.level = 0.90) %>%
   select(term, estimate, conf.low, conf.high) %>%
     mutate(term = c("Intercept", "Age")) 
 
-model_data %>%
+table <- model_data %>%
   gt() %>%
   tab_header(title = "The Affect of Age On Winning A Gold Medal", 
              subtitle = "Will being older make you less likely to win the gold?") %>% 
@@ -327,6 +328,7 @@ model_data %>%
     decimals = 5,
     use_seps = FALSE
   )
+
 ```
 
 

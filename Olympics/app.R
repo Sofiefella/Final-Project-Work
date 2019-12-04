@@ -223,9 +223,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                           mainPanel(plotOutput("statsPlot"),
                                     br(),
                                     p("This graph helps show us that over time female participation in the Games has been steadily increasing. If we look back at the 1900 Games to now, we can tell that the growth of female involvement is increasing to hopefully one day catch up with that of the males!"),
-                                    br(),
-                                    tableOutput("statsTable"),
-                                    p("In this table, the average coefficient value, or the slope of the regression line, is shown with 5th and 95th percentile values to give an indication of uncertainty associated with the term. Additionally, its corresponding r-squared value is shown as well in order to give an indication of the linear fit between the two variables."))),
+                                    br())),
                   
              
                     tabPanel("About",
@@ -699,35 +697,6 @@ server <- function(input, output) {
     
     })
     
-    output$statsTable <- renderTable({
-    
-      athlete_clean <- athlete_events %>%
-        na.omit() %>%
-        select(Age, Medal, Sex) %>%
-        mutate(gold = as.logical(ifelse(Medal == "Gold", "TRUE", "FALSE")))
-      
-      model_2 <- lm(data = athlete_clean, formula = gold ~ Age)
-      
-      conf_ints <- confint_tidy(model_2, conf.level = .9) %>% 
-        mutate(label = c("Intercept", "Coefficient")) %>%
-        filter(label == "Coefficient")
-      
-      r_squared <- glance(model_2) %>%
-        select(r.squared) %>%
-        mutate(label = "Coefficient")
-      
-      tidy(model_2) %>%
-        mutate(label = c("Intercept", "Coefficient")) %>%
-        inner_join(conf_ints, by = "label") %>%
-        inner_join(r_squared, by = "label") %>%
-        select(estimate, conf.low, conf.high, r.squared) %>%
-        rename("Coefficient" = estimate,
-               "5th Percentile" = conf.low,
-               "95th Percentile" = conf.high,
-               "R Squared" = r.squared) %>%
-        mutate_if(is.numeric, round, digits = 8)
-    
-    })
 }
 
 
