@@ -1,15 +1,6 @@
-library(readr)
-library(wbstats)
-library(plotly)
-library(maps)
-library(ggExtra)
-library(data.table)
-library(gridExtra)
-library(knitr)
 library(highcharter)
-library(tidyverse)
 library(shiny)
-library(lubridate)
+library(tidyverse)
 library(shinythemes)
 
 athlete_events <- read_csv("athlete_events.csv", col_types = cols(
@@ -223,7 +214,10 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                           mainPanel(plotOutput("statsPlot"),
                                     br(),
                                     p("This graph helps show us that over time female participation in the Games has been steadily increasing. If we look back at the 1900 Games to now, we can tell that the growth of female involvement is increasing to hopefully one day catch up with that of the males!"),
-                                    br())),
+                                    br(),
+                                    includeHTML("table.html"),
+                                    br(),
+                                    p("This chart shows the relationship between age and winning a gold medal. The intercept value shows what the probability is of winning a gold if age is not a factor. The Age row shows us that as you get older, your chances of winning a gold decrease at an incredibly slow rate. The 5th and 95th percentile columns show us the credible interval for how much your chances will go down by as you get older by one year."))),
                   
              
                     tabPanel("About",
@@ -696,6 +690,12 @@ server <- function(input, output) {
       theme(plot.title = element_text(size = 16,face = "bold"))
     
     })
+    
+    getPage <-function() {
+  
+      return(includeHTML("table.html"))}
+    
+    output$inc <- renderUI({getPage()})
     
 }
 

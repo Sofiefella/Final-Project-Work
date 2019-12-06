@@ -329,6 +329,9 @@ table <- model_data %>%
     use_seps = FALSE
   )
 
+table %>%
+  gtsave("table.html")
+
 ```
 
 
