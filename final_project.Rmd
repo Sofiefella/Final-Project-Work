@@ -184,7 +184,7 @@ map_data <- tibble(region = unique(world$region))
 map_data <- map_data %>% 
   left_join(Paris_data, by = "region")
 
-# I then took the Paris value in the map_data and got rid of the na values.
+# I then took the Paris value in the map_data and got rid of the na values and made them 0s.
   
 map_data$Paris[is.na(map_data$Paris)] <- 0
       
@@ -257,7 +257,7 @@ Age:
 athlete_events %>%
   na.omit() %>%
   ggplot(aes(x = Age)) +
-  geom_histogram(binwidth = 1, aes(fill = ..count..), color = "purple", fill = "black") +
+  geom_histogram(binwidth = 1, aes(fill = ..count..), color = "pink", fill = "black") +
   facet_wrap(~Sex) +
   labs(title = "Age Distribution of Olympics Athletes",
        subtitle = "Data Taken From the Summer Olympics 1896-2016",
@@ -268,82 +268,133 @@ athlete_events %>%
 ```
 
 Boxplot Age & Medals:
-```{r}
+```{r, boxplot of the ages people are based on what medals they won}
 
-# Make for both seasons in shiny.
+# I made a model of the code for this boxplot for one season and then in shiny I changed 
+# the filter command to made one for the summer season as well.
+# I then got rid of the na values in the Age data column and filtered for the winter season.
 
-  age_data <- athlete_events %>%
-      drop_na(Age) %>%
-      filter(Season == "Winter")
+age_data <- athlete_events %>%
+  na.omit(Age) %>%
+  filter(Season == "Winter")
+
+# I then took the data and made a series of if else statements and stored them all as the
+# Medal data in the age_data dataset.
+# First I took the values of medal for which the athletes did not win a medal and I said for
+# those values to come up as 'others'.
+# I then took the values for which gold cam up to store then as gold. I did the same for silver.
+# Then for the remaining values I said for them to come up as bronze.
     
-    age_data$Medal <- ifelse(is.na(age_data$Medal),"others",
-                             ifelse(age_data$Medal== "Gold","Gold",
-                                    ifelse(age_data$Medal== "Silver","Silver","Bronze")))
+age_data$Medal <- ifelse(is.na(age_data$Medal),"others",
+                         ifelse(age_data$Medal== "Gold","Gold",
+                                ifelse(age_data$Medal== "Silver","Silver","Bronze")))
+
+# I then took this new data and made a boxplot with the highcharter plackage which would 
+# allow for me to have a reactive cursor over the boxplot boxes.
+# I put age on the y axis and then did this packages version of faceting my gender and 
+# the type of medal as well.
+# I made the type = column because every example of this type of chart I googled had type set
+# to column.
+# I then added in some details with a title and substitle.
     
-    hcboxplot(x = age_data$Age, var = age_data$Sex, var2 = age_data$Medal, outliers = FALSE) %>% 
-      hc_chart(type = "row") %>%
-      hc_title(text = "Age Distributed: Medal Winners & Others") %>%
-      hc_subtitle(text = "Data collected From the Winter Olympics 1896-2016")
+hcboxplot(x = age_data$Age, var = age_data$Sex, var2 = age_data$Medal, outliers = FALSE) %>% 
+  hc_chart(type = "column") %>%
+  hc_title(text = "Age Distributed: Medal Winners & Others") %>%
+  hc_subtitle(text = "Data collected From the Winter Olympics 1896-2016")
 ```
 
 Density Age:
-```{r}
-athlete_events %>%
-        ggplot(aes(x = Age)) +
-        geom_density(color = "black", fill = "red") +
-        labs(title = "Age Distribution",
-             x = "Age", 
-             y = "Density",
-             subtitle = "What is the overall density of the different athlete ages?") +
-        theme_minimal() +
-        theme(plot.title = element_text(size = 16,face = "bold"))
+```{r, making a density plot of age}
+
+# First I made an overall density plot of age. Then for my second one in which I wanted there
+# to be two separate density plots by gender I added in a line of code that said fill = sex 
+# insise the aesthetics command on ggplot.
+
+# I took the big athlete data set and pipped it into ggplot with age on the x axis.
+# I then added geom_density and made the inside of graph blue with a black border.
+# I added labs to put a title and axes labels on the graph.
+# I added theme_minimal to make the background white.
 
 athlete_events %>%
-        ggplot(aes(x = Age, fill = Sex)) +
-        geom_density(alpha = 0.3) +
-        labs(title = "Age Distribution by Sex",
-             x = "Age", 
-             y = "Density",
-             subtitle = "How is the density of ages broken up by sex?") +
-        theme_minimal() +
-        theme(plot.title = element_text(size = 16,face = "bold"))
-
+  ggplot(aes(x = Age)) +
+  geom_density(color = "black", fill = "pink") +
+  labs(title = "Age Distribution",
+       x = "Age", 
+       y = "Density",
+       subtitle = "What is the overall density of the different athlete ages?") +
+  theme(plot.title = element_text(size = 16,face = "bold")) +
+  theme_minimal()
 ```
 
 Age and Medals:
-```{r}
+```{r, line graph of what age medal vs non medal winners are}
 
-# Make for both seasons in shiny.
+# I made a model of the code for this line graph for one season and then in shiny I changed 
+# the filter command to made one for the summer season as well.
+
+# I took the big athlete data set and I grouped by year season and medal because I wanted to 
+# find the average age of medal winners and the non medal winners every year the games were hosted
+# for that specific season. I then filtered for the season.
+# I used summarise to make a value mean that finds the average of the age of the groups of people.
 
 wintermedals <- athlete_events %>% 
-      group_by(Year, Season, Medal) %>% 
-      filter(Season == "Winter") %>%
-      summarise(mean = mean(Age, na.rm = TRUE))
-    
-    ggplot(wintermedals, aes(x = Year, y = mean, group = Medal, color = Medal)) +
-      geom_point(size = 1) +
-      geom_line()  +
-      labs(title = "Age of Athletes Winning Medals",
-           subtitle = "What are the typical ages of medaling athletes?",
-           x = "Year",
-           y = "Average Age") + 
-      theme(plot.title = element_text(size = 16,face = "bold"))
+  group_by(Year, Season, Medal) %>% 
+  filter(Season == "Winter") %>%
+  summarise(mean = mean(Age, na.rm = TRUE))
+
+# I took this data and piped it into the ggplot function with year on the x axis and then the average
+# age values on the y axis. I grouped by and colored medal so that each type of medal had there own
+# groupings color coated.
+# I added in geom_point and geom_line to make a line graph of the data so that it was easy to visualize.
+# I used labs to add in a title and axes labels and subtitle.
+# I then made the title big and bolded.
+
+wintermedals %>% 
+  ggplot(aes(x = Year, y = mean, group = Medal, color = Medal)) +
+  geom_point() +
+  geom_line()  +
+  labs(title = "Age of Athletes Winning Medals",
+       subtitle = "What are the typical ages of medaling athletes?",
+       x = "Year",
+       y = "Average Age") + 
+  theme(plot.title = element_text(size = 16,face = "bold"))
 ```
 
 Female vs. Male Over Time:
-```{r}
-count_per_nation <- athlete_events %>% 
+```{r, making a linear model of the number of males vs females over time}
+
+# I took the big athlete data set and filtered for the specific years I wanted. I chose a
+# random group of years that were sort of spread over to cover the trend of time. 
+# I grouped by the year, sex, and region they were from.
+# I then made a variable that accounetd for each athlete once. I didnt want to double count
+# anyone cause that would ruin the point of the graph so that is why I used length(unique(ID)).
+# I then spread the two key variables across the columns of data.
+
+nation_numbers <- athlete_events %>% 
   filter(Year %in% c(1900,1936,1976,1984,2016)) %>%
   group_by(Year, NOC, Sex) %>%
-  summarize(Count = length(unique(ID))) %>%
-  spread(Sex, Count)
+  summarize(number = length(unique(ID))) %>%
+  spread(Sex, number)
 
-names(count_per_nation)[3:4] <- c("Male","Female")
-count_per_nation$Male[is.na(count_per_nation$Male)] <- 0
-count_per_nation$Female[is.na(count_per_nation$Female)] <- 0
-count_per_nation$Year <- as.factor(count_per_nation$Year)
+# I then used the names replacement function to change values in the naiton_numbers data set.
+# I then sued [3:4] in order to change the 3rd element to Male and the 4th element to Female.
+# I then got rid of the na values for Male and then Female in the nation_numbers data set and 
+# replaced the with a 0.
 
-count_per_nation %>%
+names(nation_numbers)[3:4] <- c("Male","Female")
+nation_numbers$Male[is.na(nation_numbers$Male)] <- 0
+nation_numbers$Female[is.na(nation_numbers$Female)] <- 0
+nation_numbers$Year <- as.factor(nation_numbers$Year)
+
+# I then took the data and pipped it into a ggplot function with male of the y axis and female
+# on the x axis. For some reason when I put them in the correct x and y pairings the data was
+# showing up backwards so I had to manually put them in the opposite labels in the labs command.
+# I grouped by year to get the number of the gender every year and made them different colors to pop.
+# I then added in geom_point and an abline to make a line trend through the graph.
+# I added in geom_smooth to make a linear model of the trend of points every year.
+# I added in labs to give the graph axes labels and a title and subtitle.
+
+nation_numbers %>%
   ggplot(aes(x = Male, y = Female, group = Year, color = Year)) +
   geom_point(alpha = 0.5) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
@@ -355,17 +406,35 @@ count_per_nation %>%
 ```
 
 Regression:
-```{r}
+```{r, making a regression model}
+
+# I took the big athlete data set and took out all of the na values.
+# I then selected the variables that I wanted to us in my model.
+# I used mutate to make gold a logical variable that would be TRUE if the medal was gold and
+# FALSE if it wasnt.
+
 athlete_clean <- athlete_events %>%
-      na.omit() %>%
-      select(Age, Medal, Sex) %>%
-      mutate(gold = as.logical(ifelse(Medal == "Gold", "TRUE", "FALSE")))
+  na.omit() %>%
+  select(Age, Medal, Sex) %>%
+  mutate(gold = as.logical(ifelse(Medal == "Gold", "TRUE", "FALSE")))
+
+# I then made the model with the clean data set and made a formula of age describing the gold.
     
 model <- lm(data = athlete_clean, formula = gold ~ Age)
 
+# I then took my mdodel and in the tidy command I made a 90% credible interval for the model.
+# I selected the variables of the tidy model that I wanted to use in my table. I then made row
+# names that were labels of the data in the columns.
+
 model_data <- tidy(model, conf.int = TRUE, conf.level = 0.90) %>%
   select(term, estimate, conf.low, conf.high) %>%
-    mutate(term = c("Intercept", "Age")) 
+  mutate(term = c("Intercept", "Age")) 
+
+# I then took the data above and piped it into a gt function.
+# I added a title and subtitle.
+# I labeled all of the columns to what I wanted each of them to be.
+# I then aligned all of the values/words of that they were in the center of their cells.
+# I used fmt_number in order to adjust the number of decimal places that I wanted.
 
 table <- model_data %>%
   gt() %>%
@@ -382,6 +451,8 @@ table <- model_data %>%
     decimals = 5,
     use_seps = FALSE
   )
+
+# I saved the table as an html so that I would output the whole table in my shiny app.
 
 table %>%
   gtsave("table.html")
