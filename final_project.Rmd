@@ -5,73 +5,67 @@ date: "11/12/2019"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, setting up the libraries and data sets, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-library(readr)
-library(wbstats)
-library(plotly)
-library(maps)
+# Loading the libraries for the project.
+
 library(gt)
 library(janitor)
-library(ggExtra)
-library(webshot)
 library(highcharter)
-library(data.table)
-library(gridExtra)
-library(knitr)
-library(broom)
 library(tidyverse)
+
+# Loading the data sets for the project.
 
 athlete_events <- read_csv("athlete_events.csv")
 winter_medals <- read_csv("winter.csv")
 summer_medals <- read_csv("summer.csv")
-population <- read_csv("49b53736-b59d-4a7f-ac6f-ceaefbd69ac2_Data.csv")
-GDP <- read_csv("8c5f41b2-c7f1-4e1f-bb05-8bbe1aa9a667_Data.csv")
-
-names(GDP)[3] <- "Team"
 ```
 
-```{r}
-library(dplyr)
-all_data <- left_join(athlete_events, GDP, by = c("Team"))
-```
 
-```{r}
+```{r, creating a graph of medals won by the top scoring counties}
+
+# I created a graph of the medals won by the top scoring countries and divided
+# the medals by what kind of medal they are also. I did this for the summer games
+# and then in my shiny app I copy and pasted the code again to make the same thing
+# for the winter season but used the winter data set instead.
+
+# First I took the summer medal data set and selected the variables that I needed to 
+# make the data set. I chose country medal and year. 
+# I then grouped by country to get the medals won per country. I also grouped by medal
+# because I wanted to also know how many of each kind of medal.
+# I then counted by country to know how mnay each country got.
+# I then arranged by desc so that I could select the top medaling countries. I used head
+# to take the top countries and selected 30 so that I got around 10ish countries.
+# I then used ggplot to plot the graph with the right axes and used group and fill for 
+# medal so that the different medals were different colors.
+# I used geom_col to make columns for the data.
+# I added labels and a theme command to make the title large and bolded.
+
 summer_medals %>%
-            select(Country, Medal, Year) %>%
-            group_by(Country, Medal) %>%
-            count(Country) %>%
-            arrange(desc(n)) %>%
-            head(30) %>%
-            ggplot(aes(x = Country, y = n, group = Medal, fill = Medal)) + 
-            geom_col() +
-            labs(title = "The Top Medaling Countries: Sumer Olympic Games", 
-                 subtitle = "Which Countries Over Time Have Succeeded The Most?", 
-                 x = "Country", 
-                 y = "Number of Medals") +
-        theme(plot.title = element_text(size = 16,face = "bold"))
+  select(Country, Medal, Year) %>%
+  group_by(Country, Medal) %>%
+  count(Country) %>%
+  arrange(desc(n)) %>%
+  head(30) %>%
+  ggplot(aes(x = Country, y = n, group = Medal, fill = Medal)) +
+  geom_col() +
+  labs(title = "The Top Medaling Countries: Sumer Olympic Games",
+       subtitle = "Which Countries Over Time Have Succeeded The Most?", 
+       x = "Country", 
+       y = "Number of Medals") +
+  theme(plot.title = element_text(size = 16, face = "bold"))
   
 ```
 
-```{r}
-winter_medals %>%
-            select(Country, Medal, Year) %>%
-            group_by(Country, Medal) %>%
-            count(Country) %>%
-            arrange(desc(n)) %>%
-            head(30) %>%
-            ggplot(aes(x = Country, y = n, group = Medal, fill = Medal)) + 
-            geom_col() +
-            labs(title = "The Top Medaling Countries: Winter Olympic Games", 
-                 subtitle = "Which Countries Over Time Have Succeeded The Most?", 
-                 x = "Country", 
-                 y = "Number of Medals") +
-        theme(plot.title = element_text(size = 16,face = "bold"))
-  
-```
 
-```{r}
+```{r, creating a graph of gender trends by season}
+
+# I created a graph of the trends of the number of male and female athletes that
+# were participating in the summer games. I did this for the summer games and then
+# in my shiny app I copy and pasted the code again to make the same thing
+# for the winter season but used filter == winter instead.
+
 Gender_Per_Year <- athlete_events %>%
         filter(Season == "Summer") %>%
         group_by(Year, Sex) %>%
@@ -89,23 +83,6 @@ Gender_Per_Year <- athlete_events %>%
         theme(plot.title = element_text(size = 16,face = "bold"))
 ```
 
-```{r}
-Gender_Per_Year <- athlete_events %>%
-            filter(Season == "Winter") %>%
-            group_by(Year, Sex) %>%
-            count() %>%
-            arrange(Year)
-        
-        Gender_Per_Year %>%
-            ggplot(aes(x = Year, y = n, group = Sex, color = Sex)) +
-            geom_point() +
-            geom_line() +
-            labs(title = "Male & Female Winter Olympic Athletes Over Time", 
-                 subtitle = "How has the number of male and female athletes changed over the years?", 
-                 x = "Year", 
-                 y = "Number of Athletes") +
-          theme(plot.title = element_text(size = 16,face = "bold"))
-```
 
 ```{r}
 
