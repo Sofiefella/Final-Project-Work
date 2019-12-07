@@ -505,13 +505,14 @@ server <- function(input, output) {
     })
     
     output$athletesPlot <- renderPlot({
-      counts <- athlete_events %>% 
+      athlete_data <- athlete_events %>% 
         filter(Sport != "Art Competitions") %>%
         group_by(Year, Season) %>%
         summarize(Athletes = length(unique(ID)))
       
-      ggplot(counts, aes(x = Year, y = Athletes, group = Season, color = Season)) +
-        geom_point(size = 1) +
+      athlete_data %>%
+        ggplot(aes(x = Year, y = Athletes, group = Season, color = Season)) +
+        geom_point() +
         geom_line() +
         scale_color_manual(values = c("purple","blue")) +
         labs(title = "The Number of Athletes Over Time", 
@@ -523,13 +524,14 @@ server <- function(input, output) {
     })
     
     output$eventsPlot <- renderPlot({
-      counts <- athlete_events %>% 
+      events_data <- athlete_events %>% 
         filter(Sport != "Art Competitions") %>%
         group_by(Year, Season) %>%
         summarize(Events = length(unique(Event)))
       
-      ggplot(counts, aes(x = Year, y = Events, group = Season, color = Season)) +
-        geom_point(size = 1) +
+      events_data %>%
+        gplot(aes(x = Year, y = Events, group = Season, color = Season)) +
+        geom_point() +
         geom_line() +
         scale_color_manual(values = c("purple","blue")) +
         labs(title = "The Number of Events Over Time", 
@@ -541,13 +543,14 @@ server <- function(input, output) {
     })
     
     output$nationsPlot <- renderPlot({
-      counts <- athlete_events %>% 
+      nation_data <- athlete_events %>% 
         filter(Sport != "Art Competitions") %>%
         group_by(Year, Season) %>%
         summarize(Nations = length(unique(NOC)))
       
-      ggplot(counts, aes(x = Year, y = Nations, group = Season, color = Season)) +
-        geom_point(size = 1) +
+      nation_data %>%
+        ggplot(aes(x = Year, y = Nations, group = Season, color = Season)) +
+        geom_point() +
         geom_line() +
         scale_color_manual(values = c("purple","blue")) +
         labs(title = "The Number of Nations Over Time", 
@@ -591,18 +594,16 @@ server <- function(input, output) {
     })
     
     output$agePlot <- renderPlot({
-    age <- athlete_events %>%
-      na.omit() %>%
-      filter(Season == "Summer")
-    
-    ggplot(age, aes(x = Age))+
-      geom_histogram(binwidth = 1, aes(fill = ..count..), color = "purple", fill = "black") +
-      facet_wrap(~Sex) +
-      labs(title = "Age Distribution of Olympics Athletes",
-           subtitle = "Data Taken From the Summer Olympics 1896-2016",
-           x = "Age",
-           y = "Number of Athletes") +
-      theme(legend.position = "none",
+      athlete_events %>%
+        na.omit() %>%
+        ggplot(aes(x = Age))+
+        geom_histogram(binwidth = 1, aes(fill = ..count..), color = "purple", fill = "black") +
+        facet_wrap(~Sex) +
+        labs(title = "Age Distribution of Olympics Athletes",
+            subtitle = "Data Taken From the Summer Olympics 1896-2016",
+            x = "Age",
+            y = "Number of Athletes") +
+        theme(legend.position = "none",
             axis.text = element_text(size = 8,face="bold"),
             plot.title = element_text(size = 16,face = "bold"))
     

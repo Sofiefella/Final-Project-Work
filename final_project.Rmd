@@ -20,9 +20,10 @@ library(tidyverse)
 athlete_events <- read_csv("athlete_events.csv")
 winter_medals <- read_csv("winter.csv")
 summer_medals <- read_csv("summer.csv")
+noc_regions <- read_csv("noc_regions.csv")
 ```
 
-
+Medals:
 ```{r, creating a graph of medals won by the top scoring counties}
 
 # I created a graph of the medals won by the top scoring countries and divided
@@ -58,7 +59,7 @@ summer_medals %>%
   
 ```
 
-
+Gender Trends:
 ```{r, creating a graph of gender trends by season}
 
 # I created a graph of the trends of the number of male and female athletes that
@@ -66,131 +67,207 @@ summer_medals %>%
 # in my shiny app I copy and pasted the code again to make the same thing
 # for the winter season but used filter == winter instead.
 
+# I grouped by year and sex to see how the trends in male vs female participation
+# changed over the years of the Olympics.
+# I then counted to get the total number of each gender in each year.
+# I then arranged by year to get the most recent numbers at the bottom and the first
+# games at the top of the list.
+
 Gender_Per_Year <- athlete_events %>%
-        filter(Season == "Summer") %>%
-        group_by(Year, Sex) %>%
-        count() %>%
-        arrange(Year)
+  filter(Season == "Summer") %>%
+  group_by(Year, Sex) %>%
+  count() %>%
+  arrange(Year)
+
+# I took the data I modified above and pipped it into ggplot with year on the x axis
+# and te number of athletes on the y axis. I grouped by sex and made them different
+# colors to make the data pop.
+# I added geom point and geom line to make it a line graph.
+# Labs added in labels and a title and subtitle.
+# I added a theme command to make the title large and bolded.
       
-      Gender_Per_Year %>%
-        ggplot(aes(x = Year, y = n, group = Sex, color = Sex)) +
-        geom_point() +
-        geom_line() +
-        labs(title = "Male & Female Summer Olympic Athletes Over Time", 
-             subtitle = "How has the number of male and female athletes changed over the years?", 
-             x = "Year", 
-             y = "Number of Athletes") +
-        theme(plot.title = element_text(size = 16,face = "bold"))
+Gender_Per_Year %>%
+  ggplot(aes(x = Year, y = n, group = Sex, color = Sex)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Male & Female Summer Olympic Athletes Over Time", 
+       subtitle = "How has the number of male and female athletes changed over the years?", 
+       x = "Year", 
+       y = "Number of Athletes") +
+  theme(plot.title = element_text(size = 16,face = "bold"))
 ```
 
+Trends: Athletes, Events, Nations
+```{r, making a series of overall trend graphs}
 
-```{r}
+# I wante to make a series of three overall trend graphs: athletes, events, nations.
+# I took this graph for athletes and used it as a template for the next two. Only for 
+# the events and nations I just adjusted the summarize command so instead of 
+# athletes = length(unique(ID)) it would be for events = or nations = . I then adjusted
+# the axes to make this graph for events and nations as well just by changing the y axis 
+# variable. I made the new graphs in shiny.
 
-# Adjust the summarize and the axes to make this graph for events and nations as well 
-# in shiny.
+# First I took the big data set and filtered for sport so that I was only looking at the 
+# main sport events and wasn't looking at the art competitions.
+# I grouped by year and season to get the number of athletes per year per season to look
+# at the trends that differed by winter or summer.
+# I then summarized to create an athletes variable that only took each name, or ID, once 
+# because several of the athletes are listed many times due to being in many events. That 
+# is why I used the length(unique(ID)) command so each name only came up once.
 
-counts <- athlete_events %>% 
-        filter(Sport != "Art Competitions") %>%
-        group_by(Year, Season) %>%
-        summarize(Athletes = length(unique(ID)))
-      
-      ggplot(counts, aes(x = Year, y = Athletes, group = Season, color = Season)) +
-        geom_point(size = 1) +
-        geom_line() +
-        scale_color_manual(values = c("purple","blue")) +
-        labs(title = "The Number of Athletes Over Time", 
-             x = "Year",
-             y = "Athletes",
-             subtitle = "Have females or males been more involved?") +
-        theme(plot.title = element_text(size = 16,face = "bold"))
+athlete_data <- athlete_events %>% 
+  filter(Sport != "Art Competitions") %>%
+  group_by(Year, Season) %>%
+  summarize(Athletes = length(unique(ID)))
+
+# I then used ggplot to createa plot with the year on the x axis and the number of athletes 
+# on the y axis. I grouped by and colored season to get two separate plots one for each season
+# and I colored them to make them stick out.
+# I added geom point and line to make a line graph of the data.
+# I added scale color manual because I wanted to be able to select the colors of the lines on the
+# graph. I added labs to add in labels and axis titles.
+# I added a theme command to make the title large and bolded.
+
+athlete_data %>%       
+  ggplot(aes(x = Year, y = Athletes, group = Season, color = Season)) +
+  geom_point() +
+  geom_line() +
+  scale_color_manual(values = c("purple","blue")) +
+  labs(title = "The Number of Athletes Over Time", 
+       x = "Year",
+       y = "Athletes",
+       subtitle = "Have females or males been more involved?") +
+  theme(plot.title = element_text(size = 16,face = "bold"))
 
 ```
 
-```{r}
-noc_regions <- read_csv("noc_regions.csv")
+Maps of Origin:
+```{r, making the maps of where athletes came from}
 
-# Adjust all of the countries for different ones in shiny.
+# Here I made one basic template for a map and then in my shiny app I adjusted the template
+# to make maps for several different games and the years they were hosted. All I had to
+# do to do that is change every country name/date in the following code. For example, for the
+# sochi map every time paris appears in the template I switched it to sochi and for the title
+# and filter command I changed the year as well.
+
+# First I took the athletes data set and joined it with another region data set that I got off
+# the internet. I then used na.omit to get rid of all the na values in the regions column of the 
+# data set. I stored this all as regions.
 
 regions <- athlete_events %>% 
-        left_join(noc_regions, by = "NOC") %>%
-        filter(!is.na(region))
+  left_join(noc_regions, by = "NOC") %>%
+  na.omit(regions)
+
+# I then took the region data and filtered for the paris games which were in 1900 and they were
+# the summer games. I then grouped by region to get the region that everyone came from as different
+# groups. I then created a Paris variable that took every athlete and only selected their name
+# once so I wouldn't double count someone coming from one place.
       
-      paris <- regions %>% 
-        filter(Games == "1900 Summer") %>%
-        group_by(region) %>%
-        summarize(Paris = length(unique(ID)))
+Paris_data <- regions %>% 
+  filter(Games == "1900 Summer") %>%
+  group_by(region) %>%
+  summarize(Paris = length(unique(ID)))
+
+# I then used the map_data command to turn data from the maps package in to a data frame suitable 
+# for plotting with ggplot2. I set the region to world because I wanted to plot the data everywhere
+# in the world. I saved this data.
+
+world <- map_data("world")
+   
+# I then created a new data set where region was only listed once. I did this again by using the 
+# unique command so the same regions weren't grouped multiple times.
+
+map_data <- tibble(region = unique(world$region))
+
+# I then took the new map data and joined it together wiht my Paris data by region.      
+
+map_data <- map_data %>% 
+  left_join(Paris_data, by = "region")
+
+# I then took the Paris value in the map_data and got rid of the na values.
+  
+map_data$Paris[is.na(map_data$Paris)] <- 0
       
-      world <- map_data("world")
+# I then joined together the updated map data datset and the world data by region.
+
+world <- left_join(world, map_data, by = "region")
       
-      mappingdata <- tibble(region=unique(world$region))
-      
-      mappingdata <- mappingdata %>% 
-        left_join(paris, by = "region")
-      mappingdata$Paris[is.na(mappingdata$Paris)] <- 0
-      
-      world <- left_join(world, mappingdata, by = "region")
-      
-      ggplot(world, aes(x = long, y = lat, group = group)) +
-        geom_polygon(aes(fill = Paris)) +
-        labs(title = "Paris 1900",
-             x = NULL, 
-             y = NULL) +
-        theme(axis.ticks = element_blank(),
-              axis.text = element_blank(),
-              panel.background = element_rect(fill = "navy"),
-              plot.title = element_text(hjust = 0.5)) +
-        guides(fill = guide_colourbar(title = "Athletes")) +
-        scale_fill_gradient2(low = "white", high = "orange")
+# Once I had all the data I created a plot of the data with the long and lat values
+# as the axis labels so that I would be making a map. 
+# I grouped by group so every group of people from a region would be together.
+# I added geom_polygon to create a map and used fill to add in the Paris data.
+# I used guides and scale fill gradient to make a gradient legend that showed the 
+# white regions of the graph to be where few athletes were from and a bright orange
+# where the athletes are concentrated. The legend shows this.
+# I used labs to add a title.
+# I used theme to get rid of the axis ticks and text. I made the background navy like
+# a normal map would be.
+
+ggplot(world, aes(x = long, y = lat, group = group)) +
+  geom_polygon(aes(fill = Paris)) +
+  guides(fill = guide_colourbar(title = "Athletes")) +
+  scale_fill_gradient2(low = "white", high = "orange") +
+  labs(title = "Paris 1900") +
+  theme(axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        panel.background = element_rect(fill = "navy"))
 ```
 
-```{r}
+Body Characteristics:
+```{r, making height and weight trend graphs}
+
+# I made the code for one graph and then when I went to make the weight graph I 
+# just switched the y axis variable to weight instead of the current height one.
+
+# I took the big athlete data set and took out the na values and pipped it into a 
+# ggplot that made Year a factor variable and plotted the height values on the y axis.
+# I then filled by sex so that there would be two separate trends that showed the difference
+# in the two genders.
+# I added geom_boxplot to make a boxplot of the data.
+# I then used scale fill manual so that I could pick the colors of the different graph values.
+# I then had to adjust the size and angle of the year values so that they would be small enough
+# to all fit on the axis without overlapping.
+# I added in labs to make a nice title, subtitle, and axes labels.
+# I used theme to make the title bolded and large.
+
 athlete_events %>% 
-        na.omit() %>%
-        ggplot(aes(x = as.factor(Year), y = Height, fill = Sex)) +
-        geom_boxplot() +
-        labs(title = "Height Trends In Athletes Over Time", 
+  na.omit() %>%
+  ggplot(aes(x = as.factor(Year), y = Height, fill = Sex)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("pink","blue")) +
+  theme(axis.text.x = element_text(size = 5, angle = 20)) +
+  labs(title = "Height Trends In Athletes Over Time", 
              x = "Olympic Year", 
              y = "Height (cm)",
              subtitle = "How have Olympic athletes' heights fluctuated over time?") +
-        scale_fill_manual(values = c("pink","blue")) +
-        theme(axis.text.x = element_text(size = 5, angle = 20)) +
-        theme(plot.title = element_text(size = 16,face = "bold"))
+  theme(plot.title = element_text(size = 16,face = "bold"))
 ```
 
-```{r}
-athlete_events %>% 
-        na.omit() %>%
-        ggplot(aes(x = as.factor(Year), y = Weight, fill=Sex)) +
-        geom_boxplot() +
-        labs(title = "Weight Trends In Athletes Over Time", 
-             x = "Olympic Year", 
-             y = "Weight (kg)",
-             subtitle = "How have Olympic athletes' weights fluctuated over time?") +
-        scale_fill_manual(values = c("pink","blue")) +
-        theme(axis.text.x = element_text(size = 5, angle = 20)) +
-        theme(plot.title = element_text(size = 16,face = "bold"))
+Age:
+```{r, making an age histogram per season}
+
+# I took the big data set and took out all of the na.omit values.
+# I pipped it into ggplot to make a plot with age on the x axis.
+# I added in geom_histogram to make a histogram with the height representing the number
+# of athletes in each height bin. I added some cool colors in the graph as well.
+# I facted by sex to get two separate graphs by gender.
+# I added in labs to make a nice title and axes labels.
+# I added theme to get rid of the legend, and to make the title large and bold.
+
+athlete_events %>%
+  na.omit() %>%
+  ggplot(aes(x = Age)) +
+  geom_histogram(binwidth = 1, aes(fill = ..count..), color = "purple", fill = "black") +
+  facet_wrap(~Sex) +
+  labs(title = "Age Distribution of Olympics Athletes",
+       subtitle = "Data Taken From the Summer Olympics 1896-2016",
+       x = "Age",
+       y = "Number of Athletes") +
+  theme(legend.position = "none",
+        plot.title = element_text(size = 16,face = "bold"))
 ```
 
-```{r}
-
-# Make for both seasons in shiny.
-
-age <- athlete_events %>%
-      na.omit() %>%
-      filter(Season == "Summer")
-    
-    ggplot(age, aes(x = Age))+
-      geom_histogram(binwidth = 1, aes(fill = ..count..), color = "purple", fill = "black") +
-      facet_wrap(~Sex) +
-      labs(title = "Age Distribution of Olympics Athletes",
-           subtitle = "Data Taken From the Summer Olympics 1896-2016",
-           x = "Age",
-           y = "Number of Athletes") +
-      theme(legend.position = "none",
-            axis.text = element_text(size = 8,face="bold"),
-            plot.title = element_text(size = 16,face = "bold"))
-```
-
+Boxplot Age & Medals:
 ```{r}
 
 # Make for both seasons in shiny.
@@ -209,7 +286,7 @@ age <- athlete_events %>%
       hc_subtitle(text = "Data collected From the Winter Olympics 1896-2016")
 ```
 
-
+Density Age:
 ```{r}
 athlete_events %>%
         ggplot(aes(x = Age)) +
@@ -233,7 +310,7 @@ athlete_events %>%
 
 ```
 
-
+Age and Medals:
 ```{r}
 
 # Make for both seasons in shiny.
@@ -253,7 +330,7 @@ wintermedals <- athlete_events %>%
       theme(plot.title = element_text(size = 16,face = "bold"))
 ```
 
-
+Female vs. Male Over Time:
 ```{r}
 count_per_nation <- athlete_events %>% 
   filter(Year %in% c(1900,1936,1976,1984,2016)) %>%
@@ -277,7 +354,7 @@ count_per_nation %>%
        subtitle = "How are the number of males vs. females different?")
 ```
 
-
+Regression:
 ```{r}
 athlete_clean <- athlete_events %>%
       na.omit() %>%
@@ -309,29 +386,5 @@ table <- model_data %>%
 table %>%
   gtsave("table.html")
 
-```
-
-
-```{r}
-model_2 <- lm(data = athlete_clean, formula = gold ~ Age)
-        
-conf_ints <- confint_tidy(model_2, conf.level = .9) %>% 
-  mutate(label = c("Intercept", "Coefficient")) %>%
-  filter(label == "Coefficient")
-        
-r_squared <- glance(model_2) %>%
-  select(r.squared) %>%
-  mutate(label = "Coefficient")
-        
-tidy(model_2) %>%
-  mutate(label = c("Intercept", "Coefficient")) %>%
-  inner_join(conf_ints, by = "label") %>%
-  inner_join(r_squared, by = "label") %>%
-  select(estimate, conf.low, conf.high, r.squared) %>%
-  rename("Coefficient" = estimate,
-                   "5th Percentile" = conf.low,
-                   "95th Percentile" = conf.high,
-                   "R Squared" = r.squared) %>%
-  mutate_if(is.numeric, round, digits = 6)
 ```
 
