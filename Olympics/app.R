@@ -1202,7 +1202,6 @@ server <- function(input, output) {
         hc_add_series_labels_values(athlete$Name, athlete$medal, 
                                     colors = substr(heat.colors(10), 0, 7),
                                     type = "pie", colorByPoint = TRUE, center = c('46%', '40%'))
-                                    type = "pie", colorByPoint = TRUE, center = c('56%', '30%')) 
     })
     
     output$sport10Plot <- renderHighchart({
