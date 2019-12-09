@@ -127,7 +127,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                 br(),
                                 plotOutput("wintermedalsPlot"),
                                 br(),
-                                p("This graph, similarly to the one above, will show you what the ages of athletes are, who are 
+                                p("This graph, similarly to the one above, will show you what the average ages of athletes are, who are 
                                   both medaling or not medaling, over the course of the years that the Winter Olympics have 
                                   been held."))),
                   tabPanel("Summer Games",
@@ -155,7 +155,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                   br(),
                                   plotOutput("summermedalsPlot"),
                                   br(),
-                                  p("This graph, similarly to the one above, will show you what the ages of athletes are, who are 
+                                  p("This graph, similarly to the one above, will show you what the average ages of athletes are, who are 
                                     both medaling or not medaling, over the course of the years that the Summer Olympics have 
                                     been held."))),
                   tabPanel("Location",
@@ -193,11 +193,11 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                   tabPanel("Top 10: 2016",
                       h2("Who Are The Top 10 Athletes? Team?"),
                       br(),
-                      sidebarPanel(h3("Top 10 Stats:"),
+                      sidebarPanel(h3("Top 10 Stats"),
                                    p("The graphs on the right show us the top 10 medaling athletes (top) and the top 10 
                                     medaling teams (bottom) of 2016. By dragging your cursor over the different parts of 
                                     the pie chart you will be able to see how many medals that specific athlete or team 
-                                     won during the Olympic Games.")),
+                                     won during the most rescent Olympic Games of my data set.")),
                       mainPanel(highchartOutput("summer10Plot"),
                                 br(),
                                 highchartOutput("sport10Plot"),
@@ -237,8 +237,8 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                       mainPanel(
                         p("Both height and weight in athletes have followed similar trends as time has gone on from the early 
                           games to 2016. In both categories, the height/weight has stayed relatively stable with a slight increase 
-                          'as the time gets closer to present day. As the time gets closer to present day, there is also more 
-                          variation in the heights and weights of athltes although the general trend has stayed the same. In both 
+                          as the time gets closer to present day. Recently, there is also more variation in the heights and 
+                          weights of athltes although the general trend has stayed the same. In both 
                           cases the statistics for females have stayed below the mens' heights and weights."),
                         br(),
                         plotOutput("heightPlot"),
@@ -259,7 +259,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                   br(),
                                   plotOutput("age2Plot"),
                                   br(),
-                                  p("This density plot takes the same data that was used in the histogram, but instead of dividng 
+                                  p("This density plot takes the same data that was used in the histogram, but instead of dividing 
                                     it by gender and putting the data into bins, it shows the density level at each age."),
                                   br(),
                                   plotOutput("age3Plot"),
@@ -284,14 +284,16 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                     br(),
                                     includeHTML("table.html"),
                                     br(),
+                                    br(),
                                     p("This chart shows the relationship between age and winning a gold medal. The intercept value 
                                       shows what the probability is of winning a gold if age is not a factor. The Age row shows us 
                                       that as you get older, your chances of winning a gold decrease at an incredibly slow rate. The 
                                       5th and 95th percentile columns show us the credible interval for how much your chances will 
-                                      go down by as you get older by one year. I also made versions of this chart using Height or 
-                                      Weight as the variable instead to describe gold but for height there was a coefficient of 
-                                      0.00100 and for weight there was a coefficient of 0.00056. Both are very small values that are 
-                                      not very significant"))),
+                                      go down by as you get older by one year."),
+                                    br(),
+                                    p("I also made versions of this chart using Height or Weight as the variable instead to describe 
+                                    gold but for height there was a coefficient of 0.00100 and for weight there was a coefficient 
+                                    of 0.00056. Both are very small values that are not very significant"))),
                   
              # In the last panel I added in an about page which gives a summary overview of the project,
              # where I got all of the data for the project, and information about me as a person and how
@@ -302,16 +304,34 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                       mainPanel(
                           
                           h2("Summary"),
-                          h5("This dashboard gives you the option to explore data collected from both the summer and winter Olympic Games throughout the years of 1896 to 2016. You have the option to select and view particular data from a variety of categories, including particular locations, events, medals won, gender, and so much more."),
+                          h5("This dashboard gives you the option to explore data collected from both the summer
+                             and winter Olympic Games throughout the years of 1896 to 2016. You have the option 
+                             to select and view particular data from a variety of categories, including particular 
+                             locations, events, medals won, gender, and so much more."),
                             
                           h2("The Data"),
-                          h5("For this project I colleted three separate data sets. All of the visualizations are based on these data sets. Part of the data is from", a("Sports Reference", href="www.sports-reference.com"), ", collected in May of 2018 and the other two data sets were provided by the IOC Research and Reference Service and published by The Guardian's Datablog."),
-                          h5("One data set contains information for 270,960 different events ranging from the start of the Olympics in 1896 to the 2016 games hosted in Rio. Another data set contains 5,770 different medals won by all different athltes during the winter games, and the last data set contains 30,065 different medals won by all different athletes during the summer games."),
+                          h5("For this project I colleted four separate data sets. All of the visualizations are 
+                             based on these data sets. Part of the data is from", 
+                             a("Sports Reference", href="www.sports-reference.com"), ", collected in May of 2018 
+                             and two of the other data sets were provided by the IOC Research and Reference Service 
+                             and published by The Guardian's Datablog."),
+                          h5("One data set contains information for 270,960 different events ranging from the start 
+                             of the Olympics in 1896 to the 2016 games hosted in Rio. Another data set contains 
+                             5,770 different medals won by all different athltes during the winter games, and the 
+                             other data set contains 30,065 different medals won by all different athletes during the 
+                             summer games. The last data set contains information on the regions the athletes were from."),
                              
                           h2("About Me"),
-                          h5("I am a sophomore undergraduate student at Harvard concentrating in Economics and pursuing a secondary in Global Health and Health Policy. At Harvard, I play on the Women's Lacrosse Team and find myself getting involved in many different organizations in the athletic department. I have grown up my whole life loving sports and as a result I wanted to use this project as an opportunity to use my passion for data science and sports to explore the Olympic Games beyond what you see on television."),
-                          h5("Feel free to reach out and contact me at ogill@college.harvard.edu or connect with me on LinkedIn", a("HERE", href="https://www.linkedin.com/in/olly-gill-081899160/")),
-                          h5("The source code for this Shiny App can be found at my GitHub")))))
+                          h5("I am a sophomore undergraduate student at Harvard concentrating in Economics and pursuing 
+                             a secondary in Global Health and Health Policy. At Harvard, I play on the Women's Lacrosse 
+                             Team and find myself getting involved in many different organizations in the athletic 
+                             department. I have grown up my whole life loving sports and as a result I wanted to use 
+                             this project as an opportunity to use my passion for data science and sports to explore 
+                             the Olympic Games beyond what you see on television."),
+                          h5("Feel free to reach out and contact me at ogill@college.harvard.edu or connect with me on 
+                             LinkedIn", a("HERE", href="https://www.linkedin.com/in/olly-gill-081899160/")),
+                          h5("The source code for this Shiny App can be found at my GitHub", 
+                             a("HERE", href="https://github.com/ollygill/Final-Project-Work"))))))
 
 # Creating the server page which holds all of the code to make the graphs that I included
 # in the ui part of the project. 
@@ -803,7 +823,7 @@ server <- function(input, output) {
         na.omit() %>%
         ggplot(aes(x = as.factor(Year), y = Height, fill = Sex)) +
         geom_boxplot() +
-        scale_fill_manual(values = c("pink","blue")) +
+        scale_fill_manual(values = c("pink","navy")) +
         theme(axis.text.x = element_text(size = 5, angle = 20)) +
         labs(title = "Height Trends In Athletes Over Time", 
              x = "Olympic Year", 
@@ -829,7 +849,7 @@ server <- function(input, output) {
         na.omit() %>%
         ggplot(aes(x = as.factor(Year), y = Weight, fill = Sex)) +
         geom_boxplot() +
-        scale_fill_manual(values = c("pink","blue")) +
+        scale_fill_manual(values = c("pink","navy")) +
         theme(axis.text.x = element_text(size = 5, angle = 20)) +
         labs(title = "Weight Trends In Athletes Over Time", 
              x = "Olympic Year", 
@@ -897,7 +917,7 @@ server <- function(input, output) {
       # I added a theme command to make the title large and bolded.
       
       events_data %>%
-        gplot(aes(x = Year, y = Events, group = Season, color = Season)) +
+        ggplot(aes(x = Year, y = Events, group = Season, color = Season)) +
         geom_point() +
         geom_line() +
         scale_color_manual(values = c("pink","navy")) +
@@ -974,7 +994,7 @@ server <- function(input, output) {
       
       hcboxplot(x = age_data$Age, var = age_data$Sex, var2 = age_data$Medal, outliers = FALSE) %>% 
         hc_chart(type = "column") %>%
-        hc_title(text = "Age Distributed: Medal Winners & Others") %>%
+        hc_title(text = "Age Distributed: Medal Winners") %>%
         hc_subtitle(text = "Data collected From the Winter Olympics 1896-2016")
     })
     
@@ -1008,7 +1028,7 @@ server <- function(input, output) {
       
       hcboxplot(x = age_data$Age, var = age_data$Sex, var2 = age_data$Medal, outliers = FALSE) %>% 
         hc_chart(type = "column") %>%
-        hc_title(text = "Age Distributed: Medal Winners & Others") %>%
+        hc_title(text = "Age Distributed: Medal Winners") %>%
         hc_subtitle(text = "Data collected From the Summer Olympics 1896-2016")
     })
     
@@ -1025,7 +1045,7 @@ server <- function(input, output) {
       athlete_events %>%
         na.omit() %>%
         ggplot(aes(x = Age)) +
-        geom_histogram(binwidth = 1, aes(fill = ..count..), color = "pink", fill = "black") +
+        geom_histogram(binwidth = 1, aes(fill = ..count..), color = "black", fill = "pink") +
         facet_wrap(~Sex) +
         labs(title = "Age Distribution of Olympics Athletes",
              subtitle = "Data Taken From the Olympics 1896-2016",
@@ -1049,7 +1069,7 @@ server <- function(input, output) {
              x = "Age", 
              y = "Density",
              subtitle = "What is the overall density of the different athlete ages?") +
-        theme(plot.title = element_text(size = 16,face = "bold")) +
+        theme(plot.title = element_text(size = 16, face = "bold")) +
         theme_minimal()
     })
     
@@ -1095,7 +1115,7 @@ server <- function(input, output) {
         ggplot(aes(x = Year, y = mean, group = Medal, color = Medal)) +
         geom_point() +
         geom_line()  +
-        labs(title = "Age of Athletes Winning Medals",
+        labs(title = "The Age of Athletes Winning Medals",
              subtitle = "What are the typical ages of medaling athletes?",
              x = "Year",
              y = "Average Age") + 
@@ -1125,7 +1145,7 @@ server <- function(input, output) {
         ggplot(aes(x = Year, y = mean, group = Medal, color = Medal)) +
         geom_point() +
         geom_line()  +
-        labs(title = "Age of Athletes Winning Medals",
+        labs(title = "The Age of Athletes Winning Medals",
              subtitle = "What are the typical ages of medaling athletes?",
              x = "Year",
              y = "Average Age") + 
@@ -1173,7 +1193,8 @@ server <- function(input, output) {
         labs(title = "Female vs. Male Olympians from participating NOCs",
              x = "Number of Female Participants",
              y = "Number of Male Participants",
-             subtitle = "How are the number of males vs. females different?")
+             subtitle = "How are the number of males vs. females different?") +
+        theme(plot.title = element_text(size = 16,face = "bold"))
     })
     
     output$summer10Plot <- renderHighchart({
@@ -1236,7 +1257,7 @@ server <- function(input, output) {
   
       # Here I followed the command I found online for how to render an html in your server output.
       # I made a gt table in my rmd file and saved it as an html and then in this part of my code
-      # all I had to go was rnder the output for this html.
+      # all I had to go was render the output for this html.
       
       return(includeHTML("table.html"))}
     
