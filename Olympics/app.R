@@ -331,7 +331,9 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                           h5("Feel free to reach out and contact me at ogill@college.harvard.edu or connect with me on 
                              LinkedIn", a("HERE", href="https://www.linkedin.com/in/olly-gill-081899160/")),
                           h5("The source code for this Shiny App can be found at my GitHub", 
-                             a("HERE", href="https://github.com/ollygill/Final-Project-Work"))))))
+                             a("HERE", href="https://github.com/ollygill/Final-Project-Work")),
+                          
+                          tags$video(src = "IMG_3380.mov", width = "500px", height = "350px", type = "video/mp4", controls = "controls")))))
 
 # Creating the server page which holds all of the code to make the graphs that I included
 # in the ui part of the project. 
